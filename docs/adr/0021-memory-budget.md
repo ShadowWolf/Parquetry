@@ -29,8 +29,10 @@ Option 1.
 - Each writer has a memory budget in bytes. Several writers can share one.
 - All pooled buffers are rented through one component that charges the budget
   for the rented size.
-- `Write` never blocks or throws because of the budget. When usage reaches the
-  limit for row data, `NeedsFlush` becomes true. That limit is the budget less
+- `Write` never blocks, and never throws because row data has filled its part
+  of the budget. A later decision adds one case where it does throw, when the
+  share reserved for footer data is used up. When usage reaches the limit for
+  row data, `NeedsFlush` becomes true. That limit is the budget less
   a share reserved for footer data, under a later decision.
 - If the caller flushes when `NeedsFlush` is true, the most the writer can go
   over that limit is one row plus one page per column. This does not cover the

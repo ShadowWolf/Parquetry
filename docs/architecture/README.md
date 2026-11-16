@@ -110,6 +110,7 @@ Each of these gets a decision record when it is made.
 
 | Question | Where it matters |
 |---|---|
+| Does the project owner confirm the unsigned annotation on `byte` columns, now that a test shows Spark does not skip data when filtering on such a column? | [The byte annotation](../adr/0035-byte-annotation.md) |
 | Should the Arrow schema be written into the file's metadata, as pyarrow does? | [pyarrow parity](pyarrow-parity.md#differences-still-to-be-decided) |
 | What does the writer do when a staged destination runs out of segments? | [Memory](memory.md) |
 | Is the share of the budget reserved for footer data a number of bytes or a fraction of the budget, and how does it work when several writers use one budget? | [Memory](memory.md) |
@@ -121,7 +122,7 @@ Each of these gets a decision record when it is made.
 | Does a string that is not valid text raise an error, or is the invalid part replaced? | [Shredding and the source generator](shredding-and-source-generator.md) |
 | Which ordering is declared for floating-point statistics under each profile: the original one or IEEE 754 total order? | [File format writing](file-format-writing.md) |
 | What are the default page size, row group size, dictionary size limit, memory budget, and reserved share? These will be set from benchmarks, starting from pyarrow's values where it has them. | [Memory](memory.md) |
-| For the `Modern` profile: the default codec, whether it writes the Spark version key, and how it picks an encoding for a column. | [Options and profiles](options-and-profiles.md#not-yet-decided) |
+| For the `Modern` profile: the default codec, whether it writes the Spark version key, how it picks an encoding for a column, and whether it stores small decimals as integers. | [Options and profiles](options-and-profiles.md#not-yet-decided) |
 | Is a `Databricks` profile needed? Live tests against Databricks will show. | [Options and profiles](options-and-profiles.md) |
 
 ### Details left until the feature is built

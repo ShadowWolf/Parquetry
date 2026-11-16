@@ -20,16 +20,15 @@ for the timestamp program. Each row below comes from one of these sources:
 | `docs/research/pyarrow-parity/probe.py` | Every row not listed in the entries below. Its output is saved beside it as `output.txt`, so a row can be checked without running anything. |
 | `docs/research/pyarrow-timestamp-probe.py` | The two rows about timestamps that lose digits. |
 | `docs/research/parquet-net-probe` | The two statements about what Parquet.Net writes. |
-| [Spark and Databricks compatibility](spark-and-databricks-compatibility.md) | Every statement about Spark or Delta. Those come from reading Spark's source and have not been tested by this project. |
+| `docs/research/pyarrow-parity/decimal_size.py` | The statistics pyarrow writes for a fixed-length decimal. Its output is saved beside it. |
+| [Spark and Databricks compatibility](spark-and-databricks-compatibility.md) | Every statement about Spark or Delta. Those come from reading Spark's source. Only the reading of decimals and of unsigned 8-bit columns has been tested by this project. |
 
 No Parquetry file exists yet, so pyarrow has not read one. What the comparison
 shows is narrower. Under the default profile, each way the documents say
 Parquetry stores a type or lays out nested data is one that pyarrow itself
 writes, by default or with an option, and reads back. The last section of the
 program's output shows the read-back for the forms that are not pyarrow's
-default. That section also has two forms the library no longer writes by
-default, a decimal as INT32 and a `byte` with a signed annotation, from before
-those two decisions were changed to match pyarrow. Two things Parquetry writes are things pyarrow does not write at all:
+default. Two things Parquetry writes are things pyarrow does not write at all:
 a count of NaN values, and shortened values in the page index. Both are in the
 table of deliberate differences. The `Modern` profile has not been compared.
 The reader tests will confirm all of this with real files.
@@ -64,7 +63,8 @@ type.
 | INT96 timestamps | Not written. | The same. |
 | Signed integers | 8-bit and 16-bit values as INT32 with a signed annotation of that width. 32-bit as INT32. 64-bit as INT64. | The same. |
 | `byte` | INT32 with an unsigned 8-bit annotation. | The same. |
-| Decimals | Fixed-length bytes, in the smallest width that holds the precision: 1 byte for 1 or 2 digits, 4 bytes for 7 to 9, 8 bytes for 17 or 18, 16 bytes for 36 to 38. INT32 and INT64 are used for 18 digits or fewer only when `store_decimal_as_integer` is set. | The same, with the same option. |
+| Decimals | Fixed-length bytes, in the smallest width that holds the precision: 1 byte for 1 or 2 digits, 4 bytes for 7 to 9, 8 bytes for 17 or 18, 16 bytes for 36 to 38. INT32 and INT64 are used for 18 digits or fewer only when `store_decimal_as_integer` is set. | The same, with the same option, under the default profile. |
+| Statistics of a fixed-length decimal | Minimum and maximum are compared as signed numbers. Both the older and the newer pair of fields are written. | The same. |
 | `float`, `double`, `bool` | FLOAT, DOUBLE, BOOLEAN. | The same. |
 | Text | BYTE_ARRAY with the STRING annotation and the older UTF8 annotation. | The same. |
 | Bytes | BYTE_ARRAY with no annotation. | The same. |
@@ -119,7 +119,7 @@ This is for the project owner.
 
 | Subject | pyarrow | Parquetry as documented | Notes |
 |---|---|---|---|
-| Arrow schema in the file's metadata | Written under the key `ARROW:schema`. pyarrow uses it on read to restore Arrow types that Parquet cannot express. | Not written. | Without it, pyarrow reads a `TimeSpan` count as a plain 64-bit integer and an enum written as text as plain text. Every other type the library writes comes back the same either way. Writing it means producing Arrow's serialized schema format, and it makes the footer larger: for a file with 500 columns, pyarrow's footer was 94 KB with it and 60 KB without. |
+| Arrow schema in the file's metadata | Written under the key `ARROW:schema`. pyarrow uses it on read to restore Arrow types that Parquet cannot express. | Not written. | In the run, three columns came back differently without it: a length of time came back as a plain 64-bit integer, a text column written from an Arrow dictionary came back as plain text, and a timestamp lost the name of its time zone and came back as UTC. The first affects a `TimeSpan` stored as a count. The second would affect an enum written as text, if the library declared it as a dictionary, which is not decided. The third does not apply, because a .NET `DateTimeOffset` carries an offset per value and not per column. The unsigned 8-bit, TIME, UUID, and decimal columns came back the same either way. Writing the key means producing Arrow's serialized schema format, and it makes the footer larger: for a file with 500 columns, pyarrow's footer was 94 KB with it and 60 KB without. |
 
 ## Points not yet settled in Parquetry
 

@@ -95,6 +95,10 @@ except `DisposeAsync` then raises an error, and disposing aborts the file. One
 bad value therefore ends the whole write. A caller who expects bad data checks
 or cleans rows before writing them.
 
+Two other errors from `Write` are not about a value: the share of the memory
+budget reserved for footer data is used up, or a limit of an encrypted file is
+reached. They end the write in the same way.
+
 The state of the writer after `FlushAsync` or `CompleteAsync` fails is an open
 question, listed in the [architecture overview](README.md#open-questions).
 

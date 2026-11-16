@@ -24,7 +24,9 @@ Nothing in the library rents pooled memory any other way.
 
 The budget is a soft limit:
 
-- `Write` never blocks and never fails because of the budget.
+- `Write` never blocks, and it never fails because row data has filled its
+  part of the budget. It can fail in one case, when the share reserved for
+  footer data is used up, as described under "The reserved share" below.
 - A share of the budget is reserved for footer data, as described under
   "The reserved share" below. The rest is the row data part.
 - When usage reaches the limit of the row data part, the writer's `NeedsFlush`
@@ -60,7 +62,7 @@ metric. Users who need large row groups with little memory use a staged
 destination: Azure, or the temp-file destination in front of a sequential
 destination such as S3.
 
-## What the budget does not bound
+## What grows with the file
 
 Three things grow with the size of the file and work against the budget:
 
@@ -91,8 +93,9 @@ The size of the share is a setting, with a default to be chosen from
 benchmarks. The amount in use is reported as a metric. A user who turns the
 page index off needs a much smaller share.
 
-When the share is used up, the writer raises an error that names the setting.
-The error ends the write. A user who reaches it raises the share, turns the
+When the share is used up, `Write` raises an error that names the setting.
+The error ends the write, and the file is aborted. The metric is the only
+warning before that. A user who reaches it raises the share, turns the
 page index off, or splits the output into more files.
 
 So memory for row data is bounded by its part of the budget, and memory for

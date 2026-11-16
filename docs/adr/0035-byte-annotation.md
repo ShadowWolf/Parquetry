@@ -5,48 +5,76 @@ Date: 2026-11-16
 
 ## Context
 
-`byte` is unsigned in .NET. The decision on
-[types that need an explicit representation](0017-types-that-need-an-explicit-representation.md)
-exempted it from having to choose a form, because it is so common. That
-record stored it as INT32 annotated as a signed 16-bit integer under the
-default profile, on the grounds that the default profile writes no unsigned
-annotations.
+A Parquet column can carry an annotation that tells readers how to interpret
+the stored values, for example that an INT32 holds an unsigned 8-bit number.
+`byte` is unsigned in .NET.
 
-The comparison with pyarrow showed that this is the one place where that rule
-buys nothing:
+Most unsigned types make the user choose how they are stored, under the
+decision on
+[types that need an explicit representation](0017-types-that-need-an-explicit-representation.md).
+`byte` was exempted there because it is so common, so it needs a default. That
+record chose INT32 annotated as a signed 16-bit integer.
 
-| Writer | How a byte is stored |
-|---|---|
-| pyarrow 26.0.1 | INT32 with an unsigned 8-bit annotation. Checked by running it. |
-| Parquet.Net 6.0.3 | The same. Checked by running it. |
-| ParquetSharp | The same, according to its source code. |
+The comparison with pyarrow, which is this library's
+[reference for what is written](0031-pyarrow-as-reference.md), showed that
+other writers do it differently:
 
-Spark reads the unsigned 8-bit form as a 16-bit integer. That was read in
-Spark's source earlier and has now been tested: Spark 3.5.7, 4.0.5, and 4.1.4
-each read a pyarrow-written unsigned 8-bit column as `smallint`, with the
-values intact. A 16-bit integer is also what Spark reads from the signed form.
+| Writer | How a byte is stored | How this is known |
+|---|---|---|
+| pyarrow 26.0.1 | INT32 with an unsigned 8-bit annotation | `docs/research/pyarrow-parity/output.txt` |
+| Parquet.Net 6.0.3 | The same | Run with `docs/research/parquet-net-probe` |
+| ParquetSharp | The same | Its source code, read on 2026-11-14 |
+
+Spark was tested with a pyarrow-written unsigned 8-bit column, on versions
+3.3.3, 3.4.4, 3.5.7, 4.0.5, and 4.1.4. Two things were found:
+
+- Spark reads the column as `smallint`, a 16-bit integer, with every value
+  correct. That is the same type it reads from the signed 16-bit form.
+- Spark does not use the column's statistics to skip data. A query for
+  `u8 = 200` scanned all 6,000 rows of the test file. The same values in a
+  signed 16-bit column needed 500 rows or fewer. The results were right in
+  both cases. Only the skipping is lost.
+
+The test is in `docs/research/spark-decimal-check`.
 
 ## Options considered
 
-1. Keep the signed 16-bit annotation.
-2. Write the unsigned 8-bit annotation, as pyarrow does.
+1. Keep the signed 16-bit annotation. Spark can skip data on the column.
+   Readers that understand unsigned annotations see a 16-bit signed column.
+2. Write the unsigned 8-bit annotation, as pyarrow does. Readers see the true
+   type. Spark reads every row of the column when filtering on it.
 
 ## Decision
 
 Option 2. A `byte` column is INT32 with an unsigned 8-bit annotation, in every
 profile.
 
+The project owner chose this before the test showed that Spark stops skipping
+data on such a column. That cost is listed as a point for the owner to
+confirm, in the
+[architecture overview](../architecture/README.md#open-questions).
+
 ## Consequences
 
 - The library matches pyarrow and the other .NET libraries for the most common
   unsigned type.
 - Readers that understand unsigned annotations, such as pyarrow, see the true
-  type and range. Before this change they would have seen a signed 16-bit
-  column.
-- `byte` is the one unsigned type the default profile writes with an unsigned
-  annotation. `ushort`, `uint`, and `ulong` still need an explicit choice,
-  because Spark reads them as a wider type than the user declared and the user
-  should decide what readers see.
-- A `byte` column produces no compatibility message.
-- Databricks has not been tested. The live test against Databricks includes a
-  `byte` column.
+  type and range.
+- A filter on a `byte` column is slower in Spark than it would be with the
+  signed form, because Spark reads every row group. The answer is still
+  right.
+- An `enum` whose underlying type is `byte` is stored the same way and has the
+  same cost.
+- `byte` differs from `ushort`, `uint`, and `ulong` only in having a default.
+  Those types still need an explicit choice. One of their choices is the
+  unsigned annotation, which has the same filter cost in Spark.
+- A `byte` column produces no compatibility message, the notice the writer
+  gives for a setting that a reader of the profile cannot handle. Spark reads
+  the column.
+- When Spark writes such a column into a Delta table, it becomes `smallint`.
+  Delta has no unsigned types.
+- Databricks has not been tested. The tests against a live Databricks
+  workspace, described in
+  [Testing](../architecture/testing.md), must include a `byte` column and a
+  filter on it. If Databricks fails to read the column, this decision is
+  reopened.

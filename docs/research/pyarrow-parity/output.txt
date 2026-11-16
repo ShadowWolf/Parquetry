@@ -195,8 +195,7 @@ two names that differ only by case: A: INT64 logical=None converted=NONE max_def
 two names that differ only by case: a: INT64 logical=None converted=NONE max_def=1 max_rep=0
 
 == forms Parquetry writes that are not pyarrow's default: written by pyarrow with options, then read back ==
-decimal(9,2) as INT32: read back as decimal128(9, 2) [Decimal('1.50')]
-byte as INT32 with a signed 16-bit annotation: read back as int16 [200]
+decimal(9,2) as INT32, which is an option in Parquetry too: read back as decimal128(9, 2) [Decimal('1.50')]
 Guid as 16 fixed-length bytes with no annotation: read back as fixed_size_binary[16] [b'\x00\x11"3DUfw\x88\x99\xaa\xbb\xcc\xdd\xee\xff']
 TimeSpan as a 64-bit count: read back as int64 [90000000]
 page index on: read back as int64 [1, 2, 3]

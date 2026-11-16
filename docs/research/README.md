@@ -53,31 +53,52 @@ The folder `pyarrow-parity` holds the program behind the
 uv run --no-project --with pyarrow==26.0.1 python docs/research/pyarrow-parity/probe.py
 ```
 
-## Spark reading pyarrow's decimals
+## Spark reading pyarrow's decimals and unsigned bytes
 
 The folder `spark-decimal-check` holds a test that Spark reads decimals stored
-the way pyarrow stores them, and an unsigned 8-bit column.
+the way pyarrow stores them, and unsigned 8-bit columns.
 
-- `make_files.py` writes two files with pyarrow. Each has a decimal column at
-  every precision from 1 to 38 and an unsigned 8-bit column. One file uses
-  pyarrow's default storage, fixed-length bytes. The other uses INT32 and
-  INT64 for small decimals.
-- `check.py` reads both files with Spark, with the vectorized reader on and
-  off, and compares every value with what was written.
-- `results.txt` is the output from 2026-11-16 for Spark 3.5.7, 4.0.5, and
-  4.1.4, run from the `apache/spark` container images.
+- `make_files.py` writes the test files with pyarrow. Each table is written
+  with decimals as fixed-length bytes, pyarrow's default, and again with small
+  decimals as INT32 and INT64.
+- `check.py` reads the files with Spark and compares them with what was
+  written. It has four parts: every value of flat columns, every value of
+  nested columns, filters on sorted columns with the number of rows Spark had
+  to scan, and reads that ask for a type different from the file's. It exits
+  with status 1 if a comparison fails.
+- `run.sh` runs both for Spark 3.3.3, 3.4.4, 3.5.7, 4.0.5, and 4.1.4, using
+  the `apache/spark` container images. It needs `uv` and Docker.
+- `results` holds the output from 2026-11-16: `files.txt` shows what pyarrow
+  wrote, and there is one file per Spark version.
 
 ```
-mkdir work
-uv run --no-project --with pyarrow==26.0.1 python docs/research/spark-decimal-check/make_files.py work
-cp docs/research/spark-decimal-check/check.py work/
-docker run --rm -v "$PWD/work":/work:ro apache/spark:3.5.7-java17-python3 \
-  /opt/spark/bin/spark-submit --master "local[2]" /work/check.py /work
+sh docs/research/spark-decimal-check/run.sh
 ```
+
+The lines in the results that start with `RESULT SCHEMA` and `RESULT
+INTSCHEMA` report reads with a mismatched type. Errors and wrong values are
+expected there. They show how Spark behaves, and they do not count as
+failures.
 
 Its results are quoted in the decision records on
 [decimal storage](../adr/0036-decimal-storage.md) and
-[the byte annotation](../adr/0035-byte-annotation.md).
+[the byte annotation](../adr/0035-byte-annotation.md), and on the
+[Spark and Databricks compatibility](../architecture/spark-and-databricks-compatibility.md)
+page.
 
-The programs write their output files next to where they run. Those files are
-not kept.
+## Size of decimal columns
+
+`pyarrow-parity/decimal_size.py` writes 1,000,000 decimal values with pyarrow
+in each storage form, under several encodings and codecs, and prints the size
+of the column. It also prints the statistics pyarrow writes for a fixed-length
+decimal. Its output from 2026-11-16 is saved as `decimal_size_output.txt`.
+
+```
+uv run --no-project --with pyarrow==26.0.1 python docs/research/pyarrow-parity/decimal_size.py
+```
+
+## Output files
+
+The pyarrow programs write small Parquet files to the folder they are run
+from and overwrite or remove them. `run.sh` writes its test files to a temp
+folder. None of these files is kept in the repository.

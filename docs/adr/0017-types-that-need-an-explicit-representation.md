@@ -46,9 +46,6 @@ that lists the choices.
 - With the runtime fallback there is no build step, so the same error is
   raised when the writer is created.
 - `byte` is unsigned in .NET but is exempt from this rule, because it is common
-  and requiring a choice for it would be a burden. It is written as a 32-bit
-  integer in every profile. Under the default profile the column is annotated
-  as a 16-bit signed integer, which holds every `byte` value and which Spark
-  reads as a short. A later decision changed the annotation to unsigned
-  8-bit, to match pyarrow:
+  and requiring a choice for it would be a burden. It has a default form,
+  which is set by a later record:
   [a byte column is annotated as an unsigned 8-bit integer](0035-byte-annotation.md).

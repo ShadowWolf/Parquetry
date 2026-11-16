@@ -157,24 +157,58 @@ profile later.
 
 ## Checked by running Spark
 
-One test has been run, on 2026-11-16. pyarrow 26.0.1 wrote a file with a
-decimal column at every precision from 1 to 38, stored as fixed-length bytes
-in pyarrow's widths, and an unsigned 8-bit column. Spark read it in
-containers, with the vectorized reader on and off.
+One set of tests has been run, on 2026-11-16, against open-source Spark 3.3.3,
+3.4.4, 3.5.7, 4.0.5, and 4.1.4 in containers. Databricks and Photon were not
+tested. pyarrow 26.0.1 wrote the files, because no Parquetry file exists yet.
+Each case ran with the vectorized reader on and off. The programs and results
+are in `docs/research/spark-decimal-check`.
 
-| Spark version | Decimals as fixed-length bytes | Decimals as INT32 and INT64 | Unsigned 8-bit column |
-|---|---|---|---|
-| 3.5.7 | Every value equal | Every value equal | Read as `smallint` |
-| 4.0.5 | Every value equal | Every value equal | Read as `smallint` |
-| 4.1.4 | Every value equal | Every value equal | Read as `smallint` |
+### Decimals
 
-The program and its results are in `docs/research/spark-decimal-check`. This
-is open-source Spark. Databricks and Photon were not tested.
+Each file was written twice: with decimals as fixed-length bytes in pyarrow's
+widths, and with decimals of 18 digits or fewer as INT32 and INT64.
+
+| Case | Result on all five versions |
+|---|---|
+| A decimal column at every precision from 1 to 38: 6,000 rows in 4 row groups, with nulls, negative values, and values at the edge of each byte width. Written with dictionary pages, with plain pages, and with a dictionary that overflows into plain pages. | Every value equal, in both forms. |
+| Eight decimal columns that do not allow nulls. | Every value equal. |
+| Decimals inside lists, structs, and maps. | Every value equal. |
+| Filters on sorted decimal columns across 12 row groups. | Every count right. Spark skipped row groups in both forms. |
+
+When a query asks for a decimal type that differs from the file's, the result
+depends on the Spark version and the reader:
+
+| Requested type compared with the file's | Fixed-length bytes | Integers |
+|---|---|---|
+| Wider precision, same scale, staying within 9 digits or within 18 | Reads. | Reads. |
+| Wider precision, same scale, crossing 9 or 18 digits | Reads. | On 3.3 to 3.5, an error with the vectorized reader. Reads on 4.0 and 4.1. |
+| Larger scale, with enough precision to hold the values | On 3.3 to 3.5, an error with the vectorized reader, and reads with it off. Reads on 4.0 and 4.1. | The same. |
+| Narrower precision | On every version, an error with the vectorized reader. With that reader off, values that do not fit come back as null. | The same. |
+
+On 3.3 to 3.5 the error is "Parquet column cannot be converted". On 4.0 and
+4.1 it is reported as a data type mismatch. In no case did fixed-length bytes
+do worse than integers.
+
+### Unsigned 8-bit columns
+
+| Case | Result on all five versions |
+|---|---|
+| An unsigned 8-bit column, alone and inside a list and a struct, with and without nulls. | Read as `smallint`. Every value equal. |
+| A filter on a sorted unsigned 8-bit column, `u8 = 200`. | The count is right, but Spark scanned all 6,000 rows. |
+| The same filter on the same values in a signed 16-bit column. | The count is right, and Spark scanned 500 rows with dictionary pages and 300 with plain pages. |
+
+Spark does not use the statistics of a column with an unsigned annotation to
+skip data.
 
 ## Still to confirm by testing
 
 - Databricks, with Photon on and off, reading fixed-length decimals at several
-  precisions and an unsigned 8-bit column.
+  precisions, reading them into a table whose decimal type differs from the
+  file's, and writing the result to a Delta table.
+- Databricks reading an unsigned 8-bit column and filtering on it.
+- The cause of a Databricks knowledge base article, "Apache Spark job fails
+  with Parquet column cannot be converted error". The page could not be
+  opened on 2026-11-16.
 - Photon's handling of each encoding and codec.
 - Databricks' behavior with old dates, with and without the Spark version key.
 - Databricks' handling of unsigned integers, UUID, FLOAT16, and unannotated

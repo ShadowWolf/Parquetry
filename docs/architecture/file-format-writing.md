@@ -46,6 +46,10 @@ reports the error. The rules are therefore strict:
   built. The footer states the ordering used for each column, which the
   format calls the column order.
 - Text and bytes are compared as unsigned bytes.
+- A decimal stored as fixed-length bytes is compared as a signed number, not
+  as unsigned bytes. Compared as bytes, a negative value would sort above a
+  positive one. Both pairs of statistics fields are written for it, as pyarrow
+  does.
 - Where the right value is uncertain, the statistic is omitted.
 
 Floating-point columns have rules of their own, taken from the format

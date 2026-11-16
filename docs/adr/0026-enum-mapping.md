@@ -45,6 +45,8 @@ Option 1.
 - An enum whose underlying type is `ushort`, `uint`, or `ulong` follows the
   rule for those types: the user must choose how the number is stored, or
   choose text.
+- An enum whose underlying type is `byte` is stored as a `byte` is, with an
+  unsigned 8-bit annotation.
 - The source generator writes the name lookup at build time, so writing names
   does not need reflection and works under Native AOT.
 - How a combination of `[Flags]` values is written as text, what is written

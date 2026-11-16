@@ -32,9 +32,9 @@ adjusted to UTC, only the current annotation is written, as pyarrow does.
 | An `enum` | The same as its underlying integer type. INT32 for most enums. | The same as its underlying integer type |
 
 `byte` is unsigned in .NET, and its column carries an unsigned 8-bit
-annotation, as in pyarrow. Spark reads such a column as a 16-bit integer. It
-is the only unsigned annotation the default profile writes without being
-asked. The other unsigned types need an explicit choice, as described below.
+annotation, as in pyarrow. Spark reads such a column as a 16-bit integer, but
+does not use its statistics to skip data when a query filters on it. It is the
+only unsigned annotation the default profile writes without being asked. The other unsigned types need an explicit choice, as described below.
 
 ### Required and optional columns
 
@@ -86,9 +86,11 @@ that holds the column's precision. These are the widths pyarrow uses:
 | 34 to 35 | 15 |
 | 36 to 38 | 16 |
 
-A writer option stores decimals of 18 digits or fewer as INT32 or INT64
-instead, which is usually faster to encode and read. Spark 3.5, 4.0, and 4.1
-were tested reading both forms at every precision.
+An option, for the writer or for one column, stores decimals of 9 digits or
+fewer as INT32 and of 10 to 18 digits as INT64 instead. Spark 3.3 to 4.1 read
+pyarrow-written files in both forms correctly at every precision. The test,
+and how the two forms compare in size, are described in the decision record
+[decimals are stored as fixed-length bytes](../adr/0036-decimal-storage.md).
 
 A value that cannot be stored exactly raises an error naming the column. The
 library does not round. The precision can be set from 1 to 38. Spark and
@@ -153,7 +155,8 @@ problems and costs little extra space, because dictionary encoding stores each
 distinct name once.
 
 An enum whose underlying type is `ushort`, `uint`, or `ulong` needs an
-explicit choice, as those types do.
+explicit choice, as those types do. An enum whose underlying type is `byte` is
+stored as a `byte` is.
 
 ## Types that need an explicit choice
 

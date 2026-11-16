@@ -48,7 +48,7 @@ configuration package.
 Options cover, among other things: profile, codec, page size, row group size,
 memory budget, the policy for `DateTime` values of unspecified kind, whether
 timestamps may be truncated to microseconds, default decimal precision and
-scale, whether statistics and the page index are written,
+scale, whether small decimals are stored as integers, whether statistics and the page index are written,
 user key-value metadata, and per-column settings such as codec, encoding, and
 bloom filter.
 
@@ -95,7 +95,8 @@ built.
 ## Not yet decided
 
 - For the `Modern` profile: its default codec, whether it writes the Spark
-  version key, and how it picks an encoding for a column.
+  version key, how it picks an encoding for a column, and whether it stores
+  small decimals as integers so that its delta encoding can apply.
 - Whether a `Databricks` profile is needed.
 - Which setting wins when a column is configured both by an attribute and in
   `Columns`, and how `Columns` names a nested column or a renamed one.

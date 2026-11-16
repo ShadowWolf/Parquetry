@@ -38,7 +38,19 @@ Option 2.
   benchmarks, with the other defaults.
 
 When the reserved share is used up, the writer raises an error that names the
-setting. The error ends the write, as a value error does.
+setting. `Write` raises it, at the point where it finishes a page and there is
+no room left for the page's record. The error ends the write and the file is
+aborted, under the rule in
+[a value that cannot be written ends the write](0033-value-error-ends-the-write.md).
+
+The alternative at that point was to continue over the budget and report it.
+It was rejected because the budget would then no longer limit the writer's
+memory.
+
+The record on the [memory budget](0021-memory-budget.md) rejected a hard limit
+for row data, because a write that fails whenever memory is short would be
+hard to use. The reserved share is a hard limit of a narrower kind. Only a
+very large file reaches it, and a metric shows it coming.
 
 ## Consequences
 
@@ -54,9 +66,11 @@ setting. The error ends the write, as a value error does.
 - A user who turns the page index off needs a much smaller share, because the
   footer alone holds one record for each column in each row group and not one
   for each page.
-- The budget limits the writer's memory for both row data and footer data. A
-  very large file with a small share fails with a clear error, and the user
-  raises the share, turns the page index off, or splits the output.
+- The budget limits the writer's memory for both row data and footer data.
+- A very large file with a small share fails late in the write, and the file
+  is lost. The metric is the only warning before that. The user then starts
+  again with a larger share, with the page index off, or with the output
+  split into more files.
 - These points are still to be decided, and are listed as open questions in
   the [architecture overview](../architecture/README.md#open-questions):
   - Whether the share is set as a number of bytes or as a fraction of the

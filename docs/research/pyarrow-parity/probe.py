@@ -278,8 +278,7 @@ write("two names that differ only by case", pa.table({"A": pa.array([1]), "a": p
 
 section("forms Parquetry writes that are not pyarrow's default: written by pyarrow with options, then read back")
 forms = {
-    "decimal(9,2) as INT32": (pa.table({"v": pa.array([decimal.Decimal("1.50")], pa.decimal128(9, 2))}), {"store_decimal_as_integer": True}),
-    "byte as INT32 with a signed 16-bit annotation": (pa.table({"v": pa.array([200], pa.int16())}), {}),
+    "decimal(9,2) as INT32, which is an option in Parquetry too": (pa.table({"v": pa.array([decimal.Decimal("1.50")], pa.decimal128(9, 2))}), {"store_decimal_as_integer": True}),
     "Guid as 16 fixed-length bytes with no annotation": (pa.table({"v": pa.array([uuid.UUID(text).bytes], pa.binary(16))}), {}),
     "TimeSpan as a 64-bit count": (pa.table({"v": pa.array([90_000_000], pa.int64())}), {}),
     "page index on": (pa.table({"v": pa.array([1, 2, 3])}), {"write_page_index": True}),
