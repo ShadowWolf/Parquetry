@@ -37,8 +37,8 @@ Option 2.
 - The size of the share is a setting. Its default will be chosen from
   benchmarks, with the other defaults.
 
-This decides where the limit for row data sits. It does not decide what
-happens when the reserved share itself fills up, which stays open.
+When the reserved share is used up, the writer raises an error that names the
+setting. The error ends the write, as a value error does.
 
 ## Consequences
 
@@ -54,11 +54,11 @@ happens when the reserved share itself fills up, which stays open.
 - A user who turns the page index off needs a much smaller share, because the
   footer alone holds one record for each column in each row group and not one
   for each page.
+- The budget limits the writer's memory for both row data and footer data. A
+  very large file with a small share fails with a clear error, and the user
+  raises the share, turns the page index off, or splits the output.
 - These points are still to be decided, and are listed as open questions in
   the [architecture overview](../architecture/README.md#open-questions):
-  - What the writer does when the share is used up: raise an error that names
-    the setting, or continue over the budget and report it. Continuing would
-    mean the budget no longer limits the writer's memory.
   - Whether the share is set as a number of bytes or as a fraction of the
     budget.
   - How the share works when several writers use one budget.

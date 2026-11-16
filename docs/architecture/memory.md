@@ -91,14 +91,16 @@ The size of the share is a setting, with a default to be chosen from
 benchmarks. The amount in use is reported as a metric. A user who turns the
 page index off needs a much smaller share.
 
-So memory for row data is bounded by its part of the budget. Memory for footer
-data is bounded by the reserved share only once the next point is decided.
+When the share is used up, the writer raises an error that names the setting.
+The error ends the write. A user who reaches it raises the share, turns the
+page index off, or splits the output into more files.
+
+So memory for row data is bounded by its part of the budget, and memory for
+footer data is bounded by the reserved share.
 
 Still to be decided, and listed in the
 [architecture overview](README.md#open-questions):
 
-- What the writer does when the share is used up: raise an error that names
-  the setting, or continue over the budget and report it.
 - Whether the share is set as a number of bytes or as a fraction of the
   budget, and how it works when several writers use one budget.
 - What the writer does when a staged destination runs out of segments.

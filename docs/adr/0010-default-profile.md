@@ -48,7 +48,7 @@ It does not write the following:
 |---|---|
 | Nanosecond timestamps, TIME, UUID, half-precision floats | Spark fails to read each of these in at least one version in scope. |
 | Fixed-length byte columns without a type annotation | Spark 3.3 fails to read them. |
-| Unsigned integer annotations | Spark reads them as a wider signed type, and Delta tables have no unsigned types. |
+| Unsigned integer annotations, except on `byte` columns | Spark reads them as a wider signed type, and Delta tables have no unsigned types. |
 | INT96 timestamps | Spark reads them, but the format has deprecated them. |
 
 If testing shows that Databricks differs from open-source Spark, a `Databricks`

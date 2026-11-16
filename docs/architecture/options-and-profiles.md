@@ -12,7 +12,7 @@ readers can read the output.
 | Encodings | PLAIN, dictionary | Adds the delta encodings and BYTE_STREAM_SPLIT |
 | Default codec | Snappy | To be decided |
 | Timestamps | Microseconds, UTC. Nanoseconds produce a compatibility message if chosen. | Microseconds, UTC. Nanoseconds are allowed. |
-| UUID, TIME, FLOAT16, unsigned annotations, fixed-length bytes with no annotation | Compatibility message if chosen | Allowed |
+| UUID, TIME, FLOAT16, unsigned annotations on `ushort`, `uint`, and `ulong`, fixed-length bytes with no annotation | Compatibility message if chosen | Allowed |
 | Spark version key in metadata | Written | To be decided |
 | Page index | Written | Written |
 

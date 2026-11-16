@@ -18,23 +18,23 @@ adjusted to UTC, only the current annotation is written, as pyarrow does.
 |---|---|---|
 | `bool` | BOOLEAN | none |
 | `sbyte` | INT32 | 8-bit signed integer |
-| `byte` | INT32 | 16-bit signed integer |
+| `byte` | INT32 | 8-bit unsigned integer |
 | `short` | INT32 | 16-bit signed integer |
 | `int` | INT32 | none |
 | `long` | INT64 | none |
 | `float` | FLOAT | none |
 | `double` | DOUBLE | none |
-| `decimal` | INT32, INT64, or fixed-length bytes, by precision | DECIMAL |
+| `decimal` | Fixed-length bytes, in the smallest width that holds the precision | DECIMAL |
 | `string` | BYTE_ARRAY | STRING |
 | `byte[]`, `ReadOnlyMemory<byte>` | BYTE_ARRAY | none |
 | `DateOnly` | INT32 | DATE |
 | `DateTime`, `DateTimeOffset` | INT64 | TIMESTAMP, microseconds, adjusted to UTC |
 | An `enum` | The same as its underlying integer type. INT32 for most enums. | The same as its underlying integer type |
 
-`byte` is unsigned in .NET. The default profile does not write unsigned
-annotations, so a `byte` column is annotated as a 16-bit signed integer, which
-holds every `byte` value. The other unsigned types need an explicit choice, as
-described below.
+`byte` is unsigned in .NET, and its column carries an unsigned 8-bit
+annotation, as in pyarrow. Spark reads such a column as a 16-bit integer. It
+is the only unsigned annotation the default profile writes without being
+asked. The other unsigned types need an explicit choice, as described below.
 
 ### Required and optional columns
 
@@ -64,12 +64,33 @@ of an optional column to record nulls. It is explained in
 ### Decimal
 
 The default is precision 38 and scale 18. It can be set per writer and per
-property. Storage depends on precision: up to 9 digits uses INT32, up to 18
-uses INT64, and more uses fixed-length bytes (16 bytes for precision 38). The
-width for precisions 19 to 37, and whether smaller decimals should also use
-fixed-length bytes, are open questions on the
-[pyarrow parity](pyarrow-parity.md) page. A
-value that cannot be stored exactly raises an error naming the column. The
+property. A decimal is stored as fixed-length bytes, in the smallest width
+that holds the column's precision. These are the widths pyarrow uses:
+
+| Precision | Bytes |
+|---|---|
+| 1 to 2 | 1 |
+| 3 to 4 | 2 |
+| 5 to 6 | 3 |
+| 7 to 9 | 4 |
+| 10 to 11 | 5 |
+| 12 to 14 | 6 |
+| 15 to 16 | 7 |
+| 17 to 18 | 8 |
+| 19 to 21 | 9 |
+| 22 to 23 | 10 |
+| 24 to 26 | 11 |
+| 27 to 28 | 12 |
+| 29 to 31 | 13 |
+| 32 to 33 | 14 |
+| 34 to 35 | 15 |
+| 36 to 38 | 16 |
+
+A writer option stores decimals of 18 digits or fewer as INT32 or INT64
+instead, which is usually faster to encode and read. Spark 3.5, 4.0, and 4.1
+were tested reading both forms at every precision.
+
+A value that cannot be stored exactly raises an error naming the column. The
 library does not round. The precision can be set from 1 to 38. Spark and
 Delta Lake, the table format Databricks uses, support no more than 38, and a .NET `decimal` never has more than 29
 digits.
@@ -246,8 +267,6 @@ rejects them unless its column mapping feature is turned on.
 
 | Question | Notes |
 |---|---|
-| Should `byte` be annotated as an unsigned 8-bit integer? | pyarrow and Parquet.Net write it that way, as checked by running them. ParquetSharp does too, according to its source code. See [pyarrow parity](pyarrow-parity.md). |
-| Should decimals be stored as fixed-length bytes in the smallest width that holds the precision? | pyarrow does this by default at every precision. See [pyarrow parity](pyarrow-parity.md). |
 | How does a user leave a property out of the file? | Needed for properties of unsupported types. |
 | Can a user supply their own conversion for a type? | It would let the unsupported types be handled once per type and not once per property. |
 

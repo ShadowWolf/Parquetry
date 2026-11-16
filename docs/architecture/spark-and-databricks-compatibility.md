@@ -6,8 +6,9 @@ Databricks can read from a Parquet file. The default profile is built on it.
 The sources were Spark's source code on each release branch, Spark's issue
 tracker, the Delta Lake protocol, the Java Parquet library's source, and
 Databricks documentation. "Confirmed" below means the behavior was read in one
-of those sources. It does not mean it was tested. Nothing on this page has been
-tested by this project yet. The reader tests described in
+of those sources. It does not mean it was tested. Apart from the section
+"Checked by running Spark" below, nothing on this page has been tested by this
+project yet. The reader tests described in
 [Testing](testing.md) will do that, and this page should be corrected when they
 disagree with it.
 
@@ -154,8 +155,26 @@ profile later.
 - A TIME type, in beta from runtime 18, which needs a Delta table feature.
 - Variant and geospatial types.
 
+## Checked by running Spark
+
+One test has been run, on 2026-11-16. pyarrow 26.0.1 wrote a file with a
+decimal column at every precision from 1 to 38, stored as fixed-length bytes
+in pyarrow's widths, and an unsigned 8-bit column. Spark read it in
+containers, with the vectorized reader on and off.
+
+| Spark version | Decimals as fixed-length bytes | Decimals as INT32 and INT64 | Unsigned 8-bit column |
+|---|---|---|---|
+| 3.5.7 | Every value equal | Every value equal | Read as `smallint` |
+| 4.0.5 | Every value equal | Every value equal | Read as `smallint` |
+| 4.1.4 | Every value equal | Every value equal | Read as `smallint` |
+
+The program and its results are in `docs/research/spark-decimal-check`. This
+is open-source Spark. Databricks and Photon were not tested.
+
 ## Still to confirm by testing
 
+- Databricks, with Photon on and off, reading fixed-length decimals at several
+  precisions and an unsigned 8-bit column.
 - Photon's handling of each encoding and codec.
 - Databricks' behavior with old dates, with and without the Spark version key.
 - Databricks' handling of unsigned integers, UUID, FLOAT16, and unannotated

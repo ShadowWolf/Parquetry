@@ -27,7 +27,9 @@ shows is narrower. Under the default profile, each way the documents say
 Parquetry stores a type or lays out nested data is one that pyarrow itself
 writes, by default or with an option, and reads back. The last section of the
 program's output shows the read-back for the forms that are not pyarrow's
-default. Two things Parquetry writes are things pyarrow does not write at all:
+default. That section also has two forms the library no longer writes by
+default, a decimal as INT32 and a `byte` with a signed annotation, from before
+those two decisions were changed to match pyarrow. Two things Parquetry writes are things pyarrow does not write at all:
 a count of NaN values, and shortened values in the page index. Both are in the
 table of deliberate differences. The `Modern` profile has not been compared.
 The reader tests will confirm all of this with real files.
@@ -61,6 +63,8 @@ type.
 | Compression | Snappy. | The same, under the default profile. |
 | INT96 timestamps | Not written. | The same. |
 | Signed integers | 8-bit and 16-bit values as INT32 with a signed annotation of that width. 32-bit as INT32. 64-bit as INT64. | The same. |
+| `byte` | INT32 with an unsigned 8-bit annotation. | The same. |
+| Decimals | Fixed-length bytes, in the smallest width that holds the precision: 1 byte for 1 or 2 digits, 4 bytes for 7 to 9, 8 bytes for 17 or 18, 16 bytes for 36 to 38. INT32 and INT64 are used for 18 digits or fewer only when `store_decimal_as_integer` is set. | The same, with the same option. |
 | `float`, `double`, `bool` | FLOAT, DOUBLE, BOOLEAN. | The same. |
 | Text | BYTE_ARRAY with the STRING annotation and the older UTF8 annotation. | The same. |
 | Bytes | BYTE_ARRAY with no annotation. | The same. |
@@ -111,15 +115,11 @@ type in the table above.
 
 ## Differences still to be decided
 
-These are for the project owner. Each changes something already written down,
-so none has been changed to match pyarrow without being asked.
+This is for the project owner.
 
 | Subject | pyarrow | Parquetry as documented | Notes |
 |---|---|---|---|
-| `byte` | INT32 with an unsigned 8-bit annotation. | INT32 with a signed 16-bit annotation. | The recorded reason is that the default profile writes no unsigned annotations. For `byte` that reason is weak: Spark 3.2 and later reads the unsigned 8-bit form as a 16-bit integer, which is what it reads from the signed form too. Parquet.Net also writes the unsigned 8-bit form, which was checked by running it. |
-| Decimals of 18 digits or fewer | Fixed-length bytes, in the smallest width that holds the precision: 1 byte for 1 or 2 digits, 4 bytes for 7 to 9, 8 bytes for 17 or 18. Integers are used only when `store_decimal_as_integer` is set. | INT32 up to 9 digits and INT64 up to 18. | Both forms are valid, and Spark reads both. |
-| Decimals of 19 to 38 digits | Fixed-length bytes in the smallest width that holds the precision: 9 bytes for 19 to 21 digits, up to 16 bytes for 36 to 38. | Fixed-length bytes. The width is stated only for precision 38, as 16 bytes. | To match, the library would use the same widths. |
-| Arrow schema in the file's metadata | Written under the key `ARROW:schema`. | Not written. | pyarrow's documentation describes the value as the serialized Arrow schema, which the library would have to produce. Without it, pyarrow reads a `TimeSpan` count back as a plain 64-bit integer. Unsigned and TIME columns come back with their types either way. |
+| Arrow schema in the file's metadata | Written under the key `ARROW:schema`. pyarrow uses it on read to restore Arrow types that Parquet cannot express. | Not written. | Without it, pyarrow reads a `TimeSpan` count as a plain 64-bit integer and an enum written as text as plain text. Every other type the library writes comes back the same either way. Writing it means producing Arrow's serialized schema format, and it makes the footer larger: for a file with 500 columns, pyarrow's footer was 94 KB with it and 60 KB without. |
 
 ## Points not yet settled in Parquetry
 

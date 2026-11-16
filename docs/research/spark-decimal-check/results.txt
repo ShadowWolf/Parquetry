@@ -1,0 +1,24 @@
+=== apache/spark:3.5.7-java17-python3
+RESULT Spark 3.5.7
+RESULT PASS decimals_default.parquet, vectorized reader true: 39 columns, 5 rows, all values equal
+RESULT PASS decimals_default.parquet, vectorized reader false: 39 columns, 5 rows, all values equal
+RESULT PASS decimals_as_integers.parquet, vectorized reader true: 39 columns, 5 rows, all values equal
+RESULT PASS decimals_as_integers.parquet, vectorized reader false: 39 columns, 5 rows, all values equal
+RESULT u8 type: smallint
+RESULT failures: 0
+=== apache/spark:4.0.5-scala2.13-java17-python3-r-ubuntu
+RESULT Spark 4.0.5
+RESULT PASS decimals_default.parquet, vectorized reader true: 39 columns, 5 rows, all values equal
+RESULT PASS decimals_default.parquet, vectorized reader false: 39 columns, 5 rows, all values equal
+RESULT PASS decimals_as_integers.parquet, vectorized reader true: 39 columns, 5 rows, all values equal
+RESULT PASS decimals_as_integers.parquet, vectorized reader false: 39 columns, 5 rows, all values equal
+RESULT u8 type: smallint
+RESULT failures: 0
+=== apache/spark:4.1.4-scala2.13-java17-python3-ubuntu
+RESULT Spark 4.1.4
+RESULT PASS decimals_default.parquet, vectorized reader true: 39 columns, 5 rows, all values equal
+RESULT PASS decimals_default.parquet, vectorized reader false: 39 columns, 5 rows, all values equal
+RESULT PASS decimals_as_integers.parquet, vectorized reader true: 39 columns, 5 rows, all values equal
+RESULT PASS decimals_as_integers.parquet, vectorized reader false: 39 columns, 5 rows, all values equal
+RESULT u8 type: smallint
+RESULT failures: 0

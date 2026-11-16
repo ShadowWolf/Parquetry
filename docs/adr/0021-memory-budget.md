@@ -61,6 +61,5 @@ Option 1.
   them. A share of the budget is reserved for them, under a later decision:
   [reserved memory for footer data](0032-reserved-memory-for-footer-data.md).
 - These questions are open: how a destination charges the memory it holds,
-  which writer flushes when several share a budget, and what happens when the
-  reserved share is used up. All are described in
+  and which writer flushes when several share a budget. Both are described in
   [Memory](../architecture/memory.md).

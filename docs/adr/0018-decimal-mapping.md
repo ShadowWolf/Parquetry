@@ -34,8 +34,10 @@ an error that names the column. The library does not round.
   or one that needs more than 18 decimal places, raises an error. Users with
   such data set a different precision and scale.
 - A column with precision 38 is stored as 16 bytes per value. Users who know
-  their data fits in 18 digits can set a lower precision and get 8 bytes per
-  value. A precision of 9 or less uses 4 bytes.
+  their data fits in fewer digits can set a lower precision and get a
+  narrower column: 8 bytes at 18 digits, 4 bytes at 9. The widths are set by a
+  later decision:
+  [decimals are stored as fixed-length bytes](0036-decimal-storage.md).
 - Checking each value costs a little time on every write.
 - An error while writing ends the write. The error is raised partway through
   a row, the writer cannot continue, and the file is aborted. That rule has

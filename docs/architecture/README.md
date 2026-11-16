@@ -110,10 +110,9 @@ Each of these gets a decision record when it is made.
 
 | Question | Where it matters |
 |---|---|
-| Should `byte` be annotated as an unsigned 8-bit integer, as pyarrow and Parquet.Net write it? It is documented as a signed 16-bit integer, because the default profile writes no unsigned annotations. | [pyarrow parity](pyarrow-parity.md#differences-still-to-be-decided) |
-| Should decimals be stored as fixed-length bytes in the smallest width that holds the precision, as pyarrow does by default? Decimals of 18 digits or fewer are documented as INT32 and INT64. | [pyarrow parity](pyarrow-parity.md#differences-still-to-be-decided) |
 | Should the Arrow schema be written into the file's metadata, as pyarrow does? | [pyarrow parity](pyarrow-parity.md#differences-still-to-be-decided) |
-| What does the writer do when the share of the budget reserved for footer data is used up, or when a staged destination runs out of segments? Is the share a number of bytes or a fraction of the budget, and how does it work when several writers use one budget? | [Memory](memory.md) |
+| What does the writer do when a staged destination runs out of segments? | [Memory](memory.md) |
+| Is the share of the budget reserved for footer data a number of bytes or a fraction of the budget, and how does it work when several writers use one budget? | [Memory](memory.md) |
 | When several writers share a budget, which one is asked to flush? | [Memory](memory.md) |
 | How does a destination charge the memory it holds to the budget? | [Memory](memory.md) |
 | Where does parallel encoding run, given that `Write` is synchronous? | [Memory](memory.md) |

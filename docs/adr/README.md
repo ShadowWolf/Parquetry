@@ -62,3 +62,5 @@ title or a link may follow. A bare number is not enough.
 | [0032](0032-reserved-memory-for-footer-data.md) | A share of the memory budget is reserved for footer and page index data. |
 | [0033](0033-value-error-ends-the-write.md) | A value that cannot be written ends the write. |
 | [0034](0034-dotnet-built-in-encoders.md) | The Zstandard and Gzip encoders built into .NET 11 are not used yet. |
+| [0035](0035-byte-annotation.md) | A byte column is annotated as an unsigned 8-bit integer. |
+| [0036](0036-decimal-storage.md) | Decimals are stored as fixed-length bytes in the smallest width that fits. |

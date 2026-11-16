@@ -46,5 +46,6 @@ above and to any value error added later.
   passed. Whether the error also reports the row's position, for callers who
   pass a whole sequence, is a detail to settle when the API is built.
 - A limit that raises an error during a write ends it in the same way. The row
-  group limit of an encrypted file is one. What happens at the two memory
-  limits that are still open questions is decided separately.
+  group limit of an encrypted file is one, and a used-up reserved share of the
+  memory budget is another. What happens when a staged destination runs out
+  of segments is still an open question.

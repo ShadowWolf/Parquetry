@@ -180,8 +180,9 @@ one_all_nan_page: length of the chunk's max_value and min_value: 8 and 8 bytes
 5,000 strings of 1,000 bytes -> 3 pages; bytes in the first page: 2056223
 
 == what pyarrow reads back when the Arrow schema is not in the file ==
-store_schema=True: {'duration_us': 'duration[us]', 'uint8': 'uint8', 'time_us': 'time64[us]'}
-store_schema=False: {'duration_us': 'int64', 'uint8': 'uint8', 'time_us': 'time64[us]'}
+store_schema=True: {'duration_us': 'duration[us]', 'dictionary_of_text': 'dictionary<values=string, indices=int32, ordered=0>', 'timestamp_berlin': 'timestamp[us, tz=Europe/Berlin]', 'timestamp_utc': 'timestamp[us, tz=UTC]', 'uuid': 'extension<arrow.uuid>', 'uint8': 'uint8', 'time_us': 'time64[us]', 'decimal': 'decimal128(9, 2)'}
+store_schema=False: {'duration_us': 'int64', 'dictionary_of_text': 'string', 'timestamp_berlin': 'timestamp[us, tz=UTC]', 'timestamp_utc': 'timestamp[us, tz=UTC]', 'uuid': 'extension<arrow.uuid>', 'uint8': 'uint8', 'time_us': 'time64[us]', 'decimal': 'decimal128(9, 2)'}
+footer of a file with 500 int64 columns: 94451 bytes with the Arrow schema, 60190 bytes without
 
 == text that is not valid UTF-8 ==
 a Python string holding half of a two-unit character: building the array failed: ERROR UnicodeEncodeError: 'utf-8' codec can't encode character '\ud800' in position 0: surrogates not allowed

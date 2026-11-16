@@ -243,13 +243,24 @@ print(f"5,000 strings of 1,000 bytes -> {len(pages)} pages; bytes in the first p
 section("what pyarrow reads back when the Arrow schema is not in the file")
 table = pa.table({
     "duration_us": pa.array([1], pa.duration("us")),
+    "dictionary_of_text": pa.array(["a"]).dictionary_encode(),
+    "timestamp_berlin": pa.array([dt.datetime(2024, 5, 6)], pa.timestamp("us", tz="Europe/Berlin")),
+    "timestamp_utc": pa.array([dt.datetime(2024, 5, 6, tzinfo=dt.timezone.utc)]),
+    "uuid": pa.array([uuid.UUID(text).bytes], pa.uuid()),
     "uint8": pa.array([200], pa.uint8()),
     "time_us": pa.array([dt.time(1, 2, 3)]),
+    "decimal": pa.array([None], pa.decimal128(9, 2)),
 })
 for store in (True, False):
     pq.write_table(table, PATH, store_schema=store)
     types = {f.name: str(f.type) for f in pq.read_table(PATH).schema}
     print(f"store_schema={store}: {types}")
+wide = pa.table({f"c{i}": pa.array([1]) for i in range(500)})
+pq.write_table(wide, PATH)
+with_schema = pq.ParquetFile(PATH).metadata.serialized_size
+pq.write_table(wide, PATH, store_schema=False)
+without_schema = pq.ParquetFile(PATH).metadata.serialized_size
+print(f"footer of a file with 500 int64 columns: {with_schema} bytes with the Arrow schema, {without_schema} bytes without")
 
 section("text that is not valid UTF-8")
 column("a Python string holding half of a two-unit character", pa.string(), ["\ud800"])
