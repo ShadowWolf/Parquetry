@@ -27,6 +27,10 @@ No library code exists yet, so changing the targets costs nothing.
 
 Option 1. The library targets `net10.0`.
 
+Option 2 would matter only for the encoders that .NET 11 adds, which are not
+used yet, and it would double what has to be built and tested. Option 3 keeps
+a runtime that no longer receives fixes.
+
 ## Consequences
 
 - An application on .NET 11 or later can use the library, because a `net10.0`
@@ -34,9 +38,12 @@ Option 1. The library targets `net10.0`.
 - Applications still on .NET 8 cannot use it. They are on a runtime that no
   longer receives fixes.
 - There is one target to build and test, which shortens every test run.
+  Whether the tests also run on the .NET 11 runtime is settled when continuous
+  integration is set up.
 - The library cannot call APIs that exist only in .NET 11. The ones that
-  matter here are the Zstandard and Gzip encoders. The decision on compression
-  already says not to rely on them yet.
+  matter here are the Zstandard and Gzip encoders. A separate record says
+  they are not used yet:
+  [the encoders built into .NET 11](0034-dotnet-built-in-encoders.md).
 - A `net11.0` target can be added later without breaking anyone.
 - The source generator project still targets `netstandard2.0`, because the C#
   compiler requires that of generators.

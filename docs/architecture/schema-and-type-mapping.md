@@ -9,7 +9,8 @@ logical type. It tells readers how to interpret the stored values, for example
 that an INT32 holds a date. The format has two generations of annotation: the
 current logical types and the older converted types. Where an older converted
 type exists for a column, the writer writes both, as the format requires, so
-that old readers understand the file.
+that old readers understand the file. For a time or a timestamp that is not
+adjusted to UTC, only the current annotation is written, as pyarrow does.
 
 ## Simple types
 
@@ -64,7 +65,10 @@ of an optional column to record nulls. It is explained in
 
 The default is precision 38 and scale 18. It can be set per writer and per
 property. Storage depends on precision: up to 9 digits uses INT32, up to 18
-uses INT64, and more uses fixed-length bytes (16 bytes for precision 38). A
+uses INT64, and more uses fixed-length bytes (16 bytes for precision 38). The
+width for precisions 19 to 37, and whether smaller decimals should also use
+fixed-length bytes, are open questions on the
+[pyarrow parity](pyarrow-parity.md) page. A
 value that cannot be stored exactly raises an error naming the column. The
 library does not round. The precision can be set from 1 to 38. Spark and
 Delta Lake, the table format Databricks uses, support no more than 38, and a .NET `decimal` never has more than 29
@@ -241,8 +245,8 @@ rejects them unless its column mapping feature is turned on.
 
 | Question | Notes |
 |---|---|
-| Should `byte` be annotated as an unsigned 8-bit integer? | pyarrow, Parquet.Net, and ParquetSharp all write it that way. See [pyarrow parity](pyarrow-parity.md). |
-| Should decimals of 18 digits or fewer be stored as fixed-length bytes? | pyarrow does this by default. See [pyarrow parity](pyarrow-parity.md). |
+| Should `byte` be annotated as an unsigned 8-bit integer? | pyarrow and Parquet.Net write it that way, as checked by running them. ParquetSharp does too, according to its source code. See [pyarrow parity](pyarrow-parity.md). |
+| Should decimals be stored as fixed-length bytes in the smallest width that holds the precision? | pyarrow does this by default at every precision. See [pyarrow parity](pyarrow-parity.md). |
 | How does a user leave a property out of the file? | Needed for properties of unsupported types. |
 | Can a user supply their own conversion for a type? | It would let the unsupported types be handled once per type and not once per property. |
 

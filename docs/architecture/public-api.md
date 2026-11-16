@@ -64,7 +64,7 @@ await writer.CompleteAsync(ct);
 | Member | Behavior |
 |---|---|
 | `Write(in T)` | Shreds the row into column buffers. Encodes and compresses a page when a buffer fills. No I/O, no allocation. |
-| `NeedsFlush` | True when the writer wants the caller to call `FlushAsync`: the memory budget is reached, or a row group or segment is ready to be sent. Reading it costs one field read. |
+| `NeedsFlush` | True when the writer wants the caller to call `FlushAsync`: the part of the memory budget for row data is full, or a row group or segment is ready to be sent. Reading it costs one field read. |
 | `FlushAsync` | Sends data to the destination. If `NeedsFlush` is false it returns at once and does not close a row group early. |
 | `WriteAsync` | Calls `Write` for each row and `FlushAsync` whenever `NeedsFlush` is true. |
 | `CompleteAsync` | Closes the last row group, whatever its size, writes the page index and footer, and completes the destination. The file is valid only after this. |
@@ -83,9 +83,11 @@ A writer is not safe to use from several threads at once.
 
 ## Errors while writing
 
-`Write` raises an error when a value cannot be stored as the schema requires:
-a null in a required column, a decimal that does not fit its precision and
-scale, or a timestamp that would lose precision. The error names the column.
+`Write` raises an error when a value cannot be stored as the schema requires.
+Examples are a null in a required column, a decimal that does not fit its
+precision and scale, and a timestamp that would lose precision. The error
+names the column. The full list of cases is in the decision record
+[a value that cannot be written ends the write](../adr/0033-value-error-ends-the-write.md).
 
 The error is raised partway through the row, after some columns have already
 received their values. The writer cannot continue after it. Every method

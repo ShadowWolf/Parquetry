@@ -20,7 +20,7 @@ check. Each milestone is one or more pull requests that follow the rules in
 | 11 | Encryption. | pyarrow and Spark decrypt the files |
 | 12 | `Parquetry.Azure`, `Parquetry.S3`, the dependency injection package, and the synchronous package. | Emulator tests pass. Spark reads files from storage. |
 | 13 | Parallel encoding. Benchmarks against `Parquet.Net` and `ParquetSharp`. Live tests against Databricks, Snowflake, BigQuery, and Redshift Spectrum. | Benchmark report. Successful live runs. |
-| Later | A Zstd compressor written for this library, after looking again at the Zstandard encoder built into .NET 11. Writing row groups with several writers and joining them into one file on the storage service, for files that are not encrypted. | |
+| Later | Zstd: a compressor written for this library, or the encoder built into .NET 11 if the library targets .NET 11 by then. Writing row groups with several writers and joining them into one file on the storage service, for files that are not encrypted. | |
 
 The first release is made when milestone 13 is complete. The items marked
 "Later" are not part of it.

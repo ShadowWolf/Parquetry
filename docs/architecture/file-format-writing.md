@@ -39,9 +39,12 @@ reports the error. The rules are therefore strict:
 
 - The format has an older pair of fields, `min` and `max`, whose ordering was
   not defined for every type, and a newer pair, `min_value` and `max_value`,
-  that replaced them. The library writes only the newer pair. The footer
-  states the ordering used for each column, which the format calls the column
-  order.
+  that replaced them. The library always writes the newer pair. It also
+  writes the older pair for integer, floating-point, and boolean columns, and
+  not for text or unsigned columns. That is what pyarrow does. Which other
+  types pyarrow writes the older pair for will be checked when statistics are
+  built. The footer states the ordering used for each column, which the
+  format calls the column order.
 - Text and bytes are compared as unsigned bytes.
 - Where the right value is uncertain, the statistic is omitted.
 
@@ -49,7 +52,8 @@ Floating-point columns have rules of their own, taken from the format
 definition as it stood on 2026-11-16:
 
 - NaN values are left out of the minimum and maximum.
-- A count of NaN values is always written, even when it is zero.
+- A count of NaN values is always written, even when it is zero. pyarrow
+  26.0.1 does not write this count yet.
 - If every non-null value is NaN, no minimum or maximum is written.
 - A minimum of zero is written as negative zero and a maximum of zero as
   positive zero, so that the range covers both.

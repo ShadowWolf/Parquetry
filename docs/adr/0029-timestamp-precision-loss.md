@@ -64,7 +64,8 @@ Both match what pyarrow does when it writes microseconds.
   This is the same rule as for decimals.
 - Most users will meet this error on their first write and will set the option
   once. The error message has to make that easy by naming the option.
-- The error leaves the file incomplete, and the writer aborts.
+- The error ends the write, as every value error does:
+  [a value that cannot be written ends the write](0033-value-error-ends-the-write.md).
 - Users who have written microsecond timestamps with pyarrow get the behavior
   they know, and a file written with truncation allowed holds the same values
   pyarrow would have written from the same input. A pyarrow user who has only

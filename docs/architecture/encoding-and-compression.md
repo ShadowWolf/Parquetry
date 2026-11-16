@@ -34,7 +34,8 @@ designed yet.
 
 ### Dictionary encoding
 
-A column starts with dictionary encoding. If the dictionary grows past a size
+A column starts with dictionary encoding, except a BOOLEAN column, which is
+never dictionary-encoded. If the dictionary grows past a size
 limit, the column switches to PLAIN for the remaining pages of that chunk. The
 pages already written stay as they are. The dictionary page is written when the
 chunk ends and placed first in the chunk.
@@ -96,5 +97,6 @@ cases. Benchmarks compare speed and ratio with existing managed libraries.
 .NET 11, released on 2026-11-10, adds `ZstandardEncoder` and `GZipEncoder` to
 the base class library. Both compress from one span into another. Neither
 exists on .NET 10, which is what the library targets, so the library does not
-use them. The plan to write a Zstd compressor for this library stands. The
-built-in encoder should be looked at again before that work starts.
+use them. A user on .NET 11 can wrap the built-in Zstandard encoder in a codec
+of their own. The decision is recorded under
+[the encoders built into .NET 11](../adr/0034-dotnet-built-in-encoders.md).

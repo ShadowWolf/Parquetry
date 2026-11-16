@@ -110,9 +110,10 @@ Each of these gets a decision record when it is made.
 
 | Question | Where it matters |
 |---|---|
-| Should `byte` be annotated as an unsigned 8-bit integer, as pyarrow and both other .NET libraries write it? It is documented as a signed 16-bit integer. | [pyarrow parity](pyarrow-parity.md#differences-still-to-be-decided) |
-| Should decimals of 18 digits or fewer be stored as fixed-length bytes, as pyarrow does by default? They are documented as INT32 and INT64. | [pyarrow parity](pyarrow-parity.md#differences-still-to-be-decided) |
-| What does the writer do when the share of the budget reserved for footer data is used up, or when a staged destination runs out of segments? | [Memory](memory.md) |
+| Should `byte` be annotated as an unsigned 8-bit integer, as pyarrow and Parquet.Net write it? It is documented as a signed 16-bit integer, because the default profile writes no unsigned annotations. | [pyarrow parity](pyarrow-parity.md#differences-still-to-be-decided) |
+| Should decimals be stored as fixed-length bytes in the smallest width that holds the precision, as pyarrow does by default? Decimals of 18 digits or fewer are documented as INT32 and INT64. | [pyarrow parity](pyarrow-parity.md#differences-still-to-be-decided) |
+| Should the Arrow schema be written into the file's metadata, as pyarrow does? | [pyarrow parity](pyarrow-parity.md#differences-still-to-be-decided) |
+| What does the writer do when the share of the budget reserved for footer data is used up, or when a staged destination runs out of segments? Is the share a number of bytes or a fraction of the budget, and how does it work when several writers use one budget? | [Memory](memory.md) |
 | When several writers share a budget, which one is asked to flush? | [Memory](memory.md) |
 | How does a destination charge the memory it holds to the budget? | [Memory](memory.md) |
 | Where does parallel encoding run, given that `Write` is synchronous? | [Memory](memory.md) |
@@ -120,8 +121,8 @@ Each of these gets a decision record when it is made.
 | How does a user leave a property out of the file, and can a user supply their own conversion for a type? | [Schema and type mapping](schema-and-type-mapping.md) |
 | Does a string that is not valid text raise an error, or is the invalid part replaced? | [Shredding and the source generator](shredding-and-source-generator.md) |
 | Which ordering is declared for floating-point statistics under each profile: the original one or IEEE 754 total order? | [File format writing](file-format-writing.md) |
-| What are the default page size, row group size, dictionary size limit, and memory budget? These will be set from benchmarks. | [Memory](memory.md) |
-| For the `Modern` profile: the default codec, whether it writes the Spark version key, how it picks an encoding for a column, and how it annotates `byte`. | [Options and profiles](options-and-profiles.md#not-yet-decided) |
+| What are the default page size, row group size, dictionary size limit, memory budget, and reserved share? These will be set from benchmarks, starting from pyarrow's values where it has them. | [Memory](memory.md) |
+| For the `Modern` profile: the default codec, whether it writes the Spark version key, and how it picks an encoding for a column. | [Options and profiles](options-and-profiles.md#not-yet-decided) |
 | Is a `Databricks` profile needed? Live tests against Databricks will show. | [Options and profiles](options-and-profiles.md) |
 
 ### Details left until the feature is built
@@ -142,4 +143,5 @@ feature.
 | The interface through which a user supplies encryption keys. | [File format writing](file-format-writing.md) |
 | Whether the writer closes a stream the caller gave it. | [Layouts and destinations](layouts-and-destinations.md) |
 | The exact signatures of the methods that create a writer. | [Public API](public-api.md) |
-| The format version number written in the footer. | [pyarrow parity](pyarrow-parity.md#differences-still-to-be-decided) |
+| The format version number written in the footer. | [pyarrow parity](pyarrow-parity.md#points-not-yet-settled-in-parquetry) |
+| Whether a value error also reports the position of the row in the caller's input. | [Public API](public-api.md) |

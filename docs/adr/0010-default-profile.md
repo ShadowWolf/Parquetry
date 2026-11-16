@@ -31,7 +31,9 @@ Option 1. The default profile, `Compatible`, writes:
 - Snappy compression.
 - Timestamps as 64-bit microseconds, adjusted to UTC.
 - Lists in the standard three-level layout.
-- Statistics in the current `min_value` and `max_value` fields.
+- Statistics in the current `min_value` and `max_value` fields, and also in
+  the older `min` and `max` fields for the column types where pyarrow writes
+  both.
 
 Data page version 1 with PLAIN and dictionary encodings is what Spark and
 pyarrow write by default, so it is the combination every reader has been used

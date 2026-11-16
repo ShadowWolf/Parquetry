@@ -1,4 +1,4 @@
-# pyarrow is the reference for how values are written
+# pyarrow is the reference for what is written to a file
 
 Status: accepted
 Date: 2026-11-16
@@ -7,44 +7,52 @@ Date: 2026-11-16
 
 Many choices in a Parquet writer have more than one valid answer: how a small
 decimal is stored, what happens when a timestamp loses digits, how a list is
-laid out. pyarrow is the most widely used Parquet writer outside the Java
-tools. Other tools are tested against its files, and many of this library's
-users will also know its behavior.
+laid out, whether a page index is written. pyarrow is the Python library of
+the Apache Arrow project, and its Parquet writer is one that many of this
+library's users will already know.
 
-Two decisions had already been made by checking pyarrow: a timestamp that does
-not fit in microseconds raises an error, and a truncated value moves toward
-1970.
+Two decisions had already been made by checking pyarrow. A timestamp that does
+not fit in microseconds raises an error unless the user allows truncation, and
+when truncation is allowed the value moves toward 1970.
 
 ## Options considered
 
 1. Decide each case on its own merits.
 2. Treat pyarrow's default behavior as the reference, and depart from it only
-   for a stated reason.
+   for a recorded reason.
 
 ## Decision
 
-Option 2. Where the library has to choose how to write something, it writes
-what pyarrow writes by default, where that is possible.
+Option 2. The library writes what pyarrow writes by default, unless there is a
+recorded reason not to.
 
-A departure needs a reason, and the reason is recorded. The usual reason is
-that Spark cannot read what pyarrow writes, since reading by Spark without
-settings is also a goal.
+- This covers everything that ends up in the file: how each type is stored,
+  how nested data is laid out, which statistics and optional structures are
+  written, and what happens to a value that does not fit.
+- Default sizes, such as rows in a row group, start from pyarrow's values and
+  are then set from benchmarks.
+- The usual reason for a departure is that Spark cannot read what pyarrow
+  writes. Reading by Spark without settings is also a goal.
+- pyarrow's behavior is established by running it, not from memory or from
+  documentation alone. The programs and their output are kept in
+  `docs/research`.
 
-pyarrow's behavior is established by running it, not from memory or from
-documentation alone. The programs are kept in `docs/research`.
+pyarrow writes Arrow data, so each .NET type is compared with a stated Arrow
+type. The list is on the parity page.
 
 ## Consequences
 
 - Each new decision about written output starts with a pyarrow run.
 - [pyarrow parity](../architecture/pyarrow-parity.md) lists every comparison
-  made so far: where the library matches, where it differs on purpose, and
-  where a difference is still to be decided.
-- The first review, on 2026-11-16 against pyarrow 26.0.1, found no decision
-  that produces a file pyarrow cannot read. It found two defaults that differ
-  without a recorded reason: how `byte` is annotated and how small decimals
-  are stored. Both are listed as open questions.
-- pyarrow's defaults change between versions. The parity page records the
-  version checked, and it should be rechecked before each release.
-- pyarrow writes Arrow's own schema into the file's metadata. This library
-  does not, so a few types that pyarrow restores from that metadata, such as
-  a length of time, come back to pyarrow as plain numbers.
+  made so far: where the library matches, where it differs on purpose and
+  why, and where a difference is still to be decided.
+- The first comparison, on 2026-11-16 against pyarrow 26.0.1, found that every
+  form the documents say the library will write is one pyarrow itself writes,
+  by default or with an option, and reads back. No Parquetry file exists yet,
+  so this is not the same as pyarrow having read one. The reader tests will
+  confirm it.
+- That comparison also found differences that had no decision behind them. The
+  parity page lists the ones that are still open.
+- pyarrow's defaults change between its versions. The parity page records the
+  version checked, and the comparison should be run again before each release
+  of this library.

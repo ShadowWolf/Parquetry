@@ -32,3 +32,5 @@ and `Parquetry.Sync`. The license is MIT.
   2026-11-14. That check did not cover reserved ID prefixes or trademarks.
 - The `Parquetry` prefix should be reserved on nuget.org before the first
   package is published.
+- The copyright holder named in `LICENSE` is Bryan Wolf, who publishes the
+  library as an individual.

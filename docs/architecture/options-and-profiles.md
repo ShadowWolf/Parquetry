@@ -95,8 +95,7 @@ built.
 ## Not yet decided
 
 - For the `Modern` profile: its default codec, whether it writes the Spark
-  version key, how it picks an encoding for a column, and whether it annotates
-  a `byte` column as unsigned.
+  version key, and how it picks an encoding for a column.
 - Whether a `Databricks` profile is needed.
 - Which setting wins when a column is configured both by an attribute and in
   `Columns`, and how `Columns` names a nested column or a renamed one.

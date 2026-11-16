@@ -1,74 +1,128 @@
 # pyarrow parity
 
-The library aims to write what pyarrow writes by default, wherever that is
-possible. This page compares each decision made so far with pyarrow.
+pyarrow is the Python library of the Apache Arrow project. Its Parquet writer
+is the reference for this library: Parquetry writes what pyarrow writes by
+default, unless there is a recorded reason not to. This page compares what the
+documents say Parquetry will write with what pyarrow writes.
 
-The comparison was made on 2026-11-16 by running pyarrow 26.0.1. The program
-is `docs/research/pyarrow-parity-probe.py`. Where a row below comes from
-pyarrow's documentation and not from the run, it says so.
+The terms used here, such as page index, annotation, and profile, are explained
+in the [architecture overview](README.md#terms),
+[Parquet format notes](parquet-format-notes.md), and
+[Schema and type mapping](schema-and-type-mapping.md).
 
-No decision made so far produces a file that pyarrow cannot read. Two defaults
-differ from pyarrow without a recorded reason, and they are listed under
-[Differences still to be decided](#differences-still-to-be-decided).
+## How the comparison was made
+
+pyarrow 26.0.1 was run on 2026-11-16. Each row below comes from one of these
+sources:
+
+| Source | What it covers |
+|---|---|
+| `docs/research/pyarrow-parity/probe.py` | Every row not listed in the next two entries. Its output is saved beside it as `output.txt`, so a row can be checked without running anything. |
+| `docs/research/pyarrow-timestamp-probe.py` | The two rows about timestamps that lose digits. |
+| [Spark and Databricks compatibility](spark-and-databricks-compatibility.md) | Every statement about Spark or Delta. Those come from reading Spark's source and have not been tested by this project. |
+
+No Parquetry file exists yet, so pyarrow has not read one. What the comparison
+shows is narrower: every form the documents say Parquetry will write is a form
+that pyarrow itself writes, by default or with an option, and reads back. The
+last section of the program's output shows the read-back for the forms that
+are not pyarrow's default. The reader tests will confirm this with real files.
+
+## Which Arrow type each .NET type is compared with
+
+pyarrow writes Arrow data, so a comparison needs an Arrow type for each .NET
+type.
+
+| .NET type | Arrow type | Notes |
+|---|---|---|
+| `bool`, `float`, `double`, `string`, `byte[]` | `bool_`, `float32`, `float64`, `string`, `binary` | |
+| `sbyte`, `short`, `int`, `long` | `int8`, `int16`, `int32`, `int64` | |
+| `byte`, `ushort`, `uint`, `ulong` | `uint8`, `uint16`, `uint32`, `uint64` | |
+| `Half` | `float16` | |
+| `decimal` | `decimal128` with the column's precision and scale | |
+| `DateOnly` | `date32` | |
+| `DateTime`, `DateTimeOffset` | `timestamp` in microseconds with a time zone | Arrow has no unit of 100 nanoseconds. Microseconds is the unit Parquetry stores. The nearest unit that loses nothing is nanoseconds. |
+| `TimeOnly` | `time64` in microseconds | The same point about units applies. |
+| `TimeSpan` | `duration` in microseconds | The same point about units applies. |
+| `Guid` | `uuid` | |
+| An `enum` | None. The nearest is a dictionary of text. | |
+| `List<T>`, `Dictionary<K, V>`, a class | `list_`, `map_`, `struct` | |
 
 ## Where the library matches pyarrow
 
-| Subject | What pyarrow writes by default | Parquetry |
+| Subject | What pyarrow does | Parquetry |
 |---|---|---|
-| Data page version | 1 | The same, under the default profile. |
-| Encodings | PLAIN and dictionary | The same, under the default profile. |
-| Compression | Snappy | The same. |
-| INT96 timestamps | Not written | The same. |
-| Signed integers | 8-bit and 16-bit values as INT32 with a signed annotation of that width. 32-bit as INT32. 64-bit as INT64. | The same for `sbyte`, `short`, `int`, and `long`. |
-| `float`, `double`, `bool` | FLOAT, DOUBLE, BOOLEAN | The same. |
-| Text | BYTE_ARRAY with the STRING annotation and the older UTF8 annotation | The same. |
-| Bytes | BYTE_ARRAY with no annotation | The same. |
-| Dates | INT32 with the DATE annotation | The same for `DateOnly`. |
-| Timestamps with a time zone | INT64, microseconds, adjusted to UTC. A value with another offset is converted to UTC, and the offset is not kept in the Parquet schema. | The same for `DateTime` of kind `Utc` or `Local`, and for `DateTimeOffset`. |
-| A timestamp that loses digits when written as microseconds | An error, unless truncation is allowed | The same. |
-| Direction of truncation | Toward 1970 | The same. |
-| A date outside what nanoseconds can hold | An error | The same. |
-| A decimal that does not fit its precision and scale | An error | The same. |
-| A non-nullable field | A required column. A null in it is an error. | The same. |
+| Data page version | Writes version 1. | The same, under the default profile, `Compatible`. |
+| Encodings | PLAIN and dictionary. A BOOLEAN column is not dictionary-encoded. | The same, under the default profile. |
+| Compression | Snappy. | The same. |
+| INT96 timestamps | Not written. | The same. |
+| Signed integers | 8-bit and 16-bit values as INT32 with a signed annotation of that width. 32-bit as INT32. 64-bit as INT64. | The same. |
+| `float`, `double`, `bool` | FLOAT, DOUBLE, BOOLEAN. | The same. |
+| Text | BYTE_ARRAY with the STRING annotation and the older UTF8 annotation. | The same. |
+| Bytes | BYTE_ARRAY with no annotation. | The same. |
+| Dates | INT32 with the DATE annotation. | The same. |
+| A timestamp in microseconds with a time zone | INT64 with the TIMESTAMP annotation, microseconds, adjusted to UTC. A value with another offset is converted to UTC, and the offset is not kept in the Parquet schema. | The same for `DateTime` of kind `Utc` or `Local`, and for `DateTimeOffset`. |
+| A timestamp that would lose digits when converted to microseconds | When asked to convert, pyarrow raises an error unless `allow_truncated_timestamps` is set. | The same: an error unless the truncation option is set. |
+| Direction of that truncation, when it is allowed | Toward 1970. | The same. |
+| A timestamp outside the range nanoseconds can hold | An error when the nanosecond value is built. | An error, for a column set to nanoseconds. |
+| A decimal value that does not fit the column's precision and scale | An error when the value is built or cast with checking on. | An error. |
+| A non-nullable field | A required column. Writing a null into it is an error. | The same. |
 | Lists | Three levels, with the inner names `list` and `element`. The element is required when its type is not nullable. | The same. |
-| Maps | A repeated `key_value` group with a required key | The same. |
-| A struct with no fields | An error | The same, as a build error. |
-| Floating-point statistics | NaN is left out of the minimum and maximum. If every value is NaN, no minimum or maximum is written. A zero minimum is written as negative zero and a zero maximum as positive zero. | The same. |
-| Page index for a column chunk with an all-NaN page | The value ranges are left out and the page positions are written | The same. |
-| Bloom filters | Off | The same. |
-| Column names with spaces or punctuation, or that differ only by case | Written as given | Written as given, with a compatibility message under the default profile. |
+| Maps | A repeated `key_value` group with a required key. | The same. |
+| A struct with no fields | An error. | The same, reported when the project is built. |
+| Minimum and maximum of a floating-point column | NaN is left out. If every value is NaN, neither is written. A zero minimum is written as negative zero and a zero maximum as positive zero. | The same. |
+| Older `min` and `max` statistics fields | Written beside the newer `min_value` and `max_value` for integer, floating-point, and boolean columns. Not written for text or unsigned columns. | The same. |
+| Page index for a column chunk in which one page holds only NaN | With the page index turned on, the value ranges for that chunk are left out and the page positions are written. | The same. |
+| Bloom filters | Off. | The same. |
+| Column names with spaces or punctuation, or that differ only by case | Written as given. | Written as given. Under the default profile the writer also reports a compatibility message, a notice raised when the writer is created, because a Delta table rejects such names. |
+| TIME | Marked as not adjusted to UTC. | The same, when the user chooses TIME for a `TimeOnly`. |
 
 ## Where a choice in Parquetry produces what pyarrow writes
 
-For these types the library makes the user choose a representation, because
-Spark cannot read what pyarrow writes or reads it as a different type. One of
-the choices is always pyarrow's form.
+For these types the library makes the user choose a representation, and the
+build fails until they do. One of the choices is pyarrow's form for the Arrow
+type in the table above.
 
-| .NET type | What pyarrow writes for its matching type | The matching choice |
-|---|---|---|
-| `Guid` | 16 fixed-length bytes with the UUID annotation, in the order of the digits in the text form | 16 bytes with the UUID annotation |
-| `Half` | 2 fixed-length bytes with the FLOAT16 annotation | FLOAT16 |
-| `ushort`, `uint`, `ulong` | INT32 or INT64 with an unsigned annotation | The unsigned annotation |
-| `TimeOnly` | TIME in the value's unit, marked as not adjusted to UTC | TIME in microseconds. The library marks it as not adjusted to UTC, to match. |
-| `TimeSpan` | INT64 with no annotation, holding a count in the value's unit | A 64-bit count of microseconds |
+| .NET type | What pyarrow writes | The matching choice | Why the user must choose |
+|---|---|---|---|
+| `Guid` | 16 fixed-length bytes with the UUID annotation, in the order of the digits in the text form. | 16 bytes with the UUID annotation, in the same byte order. | Spark cannot read UUID. |
+| `Half` | 2 fixed-length bytes with the FLOAT16 annotation. | FLOAT16. | Spark cannot read FLOAT16. |
+| `ushort`, `uint`, `ulong` | INT32 or INT64 with an unsigned annotation. | The unsigned annotation. | Spark reads these as a wider signed type, and Delta tables have no unsigned types. |
+| `TimeOnly` | INT64 with the TIME annotation, microseconds. | TIME in microseconds. | Spark 3.x and 4.0 cannot read TIME. |
+| `TimeSpan` | INT64 with no annotation, holding a count of microseconds. | A 64-bit count of microseconds. | Parquet has no type for a length of time, so a reader sees a plain number and the user should choose its unit. |
 
 ## Differences that are deliberate
 
 | Subject | pyarrow | Parquetry | Reason |
 |---|---|---|---|
-| A date and time with no time zone | Written as a timestamp that is not adjusted to UTC, with no error | A `DateTime` of kind `Unspecified` raises an error unless a policy is set | Spark 3.3 reads such a column as a point in time, and a Delta table needs a feature enabled to hold one. pyarrow's form is available as a column setting. |
-| Page index | Off unless asked for | On | Readers that do not use it ignore it, and it lets readers skip pages. |
-| Types in the table above | Written with no choice needed | A build error until the user chooses | Spark cannot read the result, or reads it as a different type. |
-| Enums | Arrow has no enum type. Its nearest type, a dictionary of text, is written as text. | The number by default, with text as an option | The number is what Parquet.Net and `System.Text.Json` write. |
-| Arrow schema in the file's metadata | Written under the key `ARROW:schema` | Not written | It is specific to Arrow. Without it, pyarrow reads a `TimeSpan` count as a plain 64-bit integer. |
-| Spark version key in the file's metadata | Not written | Written under the default profile | It lets Spark 3.x read old dates. pyarrow ignores it. |
+| Unit of a timestamp | The unit of the Arrow value. Nanosecond values are written as nanoseconds. | Microseconds, unless a column is set to nanoseconds. | Spark, in the versions checked, cannot read nanosecond timestamps. |
+| A date and time with no time zone | Written as a timestamp that is not adjusted to UTC, with no error. | A `DateTime` of kind `Unspecified` raises an error unless the user sets a policy for such values. | Spark 3.3 reads such a column as a point in time, and a Delta table needs a feature enabled to hold one. pyarrow's form can be chosen per column. |
+| Page index | Off unless asked for. | On. | Readers that do not use it ignore it, and it lets readers skip pages. |
+| Long values in the page index | Written whole. A 206-byte value is stored as 206 bytes. | Shortened to 64 bytes. | The page index is kept in memory until the file is complete, so its size has to be limited. |
+| Count of NaN values in statistics | Not written. | Written for floating-point columns. | The current format definition requires it. pyarrow 26.0.1 has not adopted it. Readers that do not know the field skip it. |
+| The types in the previous section | Written with no choice needed. | A build error until the user chooses. | Given per type in that section. |
+| Enums | Arrow has no enum type. Its nearest type, a dictionary of text, is written as text. | The number by default, with text as an option. | The number is what Parquet.Net writes, which was checked by running it, and what `System.Text.Json` writes by default. |
+| Spark version key in the file's metadata | Not written. | Written under the default profile. | It lets Spark 3.x read dates before 1582. pyarrow reads a file that has the key with no change in the values. |
+| `created_by` | `parquet-cpp-arrow version 26.0.1` | `Parquetry version x.y.z (build <hash>)` | Each writer names itself. |
 
 ## Differences still to be decided
 
+These are for the project owner. Each changes something already written down,
+so none has been changed to match pyarrow without being asked.
+
 | Subject | pyarrow | Parquetry as documented | Notes |
 |---|---|---|---|
-| `byte` | INT32 with an unsigned 8-bit annotation | INT32 with a signed 16-bit annotation | Parquet.Net and ParquetSharp also write the unsigned 8-bit annotation. Spark 3.2 and later reads it as a 16-bit integer, which is what the signed form gives too. |
-| Small decimals | Fixed-length bytes at every precision: 4 bytes up to 9 digits, 8 up to 18, 16 up to 38. Integers are used only when `store_decimal_as_integer` is set. | INT32 up to 9 digits and INT64 up to 18 | Both forms are valid, and Spark reads both. |
-| Text that is not valid | Python refuses to build such a string, so nothing is written | Open: raise an error or replace the invalid part | pyarrow's behavior points to raising an error. |
-| Format version recorded in the footer | pyarrow reports 2.6 for its files | Not yet stated | To be settled when the footer is built. |
-| Default sizes | From pyarrow's documentation: row groups of up to 1,048,576 rows, data pages of 1 MB, and a dictionary page limit of 1 MB | Not yet set | These are the starting point for the benchmarks that will set the defaults. |
+| `byte` | INT32 with an unsigned 8-bit annotation. | INT32 with a signed 16-bit annotation. | The recorded reason is that the default profile writes no unsigned annotations. For `byte` that reason is weak: Spark 3.2 and later reads the unsigned 8-bit form as a 16-bit integer, which is what it reads from the signed form too. Parquet.Net also writes the unsigned 8-bit form, which was checked by running it. |
+| Decimals of 18 digits or fewer | Fixed-length bytes, in the smallest width that holds the precision: 1 byte for 1 or 2 digits, 4 bytes for 7 to 9, 8 bytes for 17 or 18. Integers are used only when `store_decimal_as_integer` is set. | INT32 up to 9 digits and INT64 up to 18. | Both forms are valid, and Spark reads both. |
+| Decimals of 19 to 38 digits | Fixed-length bytes in the smallest width that holds the precision: 9 bytes for 19 to 21 digits, up to 16 bytes for 36 to 38. | Fixed-length bytes. The width is stated only for precision 38, as 16 bytes. | To match, the library would use the same widths. |
+| Arrow schema in the file's metadata | Written under the key `ARROW:schema`. | Not written. | It is in Arrow's own binary format, which the library would have to produce. Without it, pyarrow reads a `TimeSpan` count back as a plain 64-bit integer. Unsigned and TIME columns come back with their types either way. |
+
+## Points not yet settled in Parquetry
+
+For these, pyarrow's behavior is the starting point.
+
+| Subject | pyarrow | Notes |
+|---|---|---|
+| Text that is not valid UTF-8 | Converting such bytes to a string raises an error. The Parquet writer itself does not check: a string array built without that check is written as it is. | The open question is whether Parquetry raises an error or replaces the invalid part. pyarrow's checked path raises an error. |
+| Version number in the footer | The footer's version field is 2. pyarrow's API calls this format version 2.6. | To be settled when the footer is built. |
+| Rows in a row group | At most 1,048,576. A write of 2,500,000 rows gave row groups of 1,048,576, 1,048,576, and 402,848 rows. | The defaults will be set from benchmarks. |
+| Size of a page | At most 20,000 rows. Pages of 8-byte values came out at 160 KB. Pages of 1,000-byte strings came out at about 2 MB. | The defaults will be set from benchmarks. |

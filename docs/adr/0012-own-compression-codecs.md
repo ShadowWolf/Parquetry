@@ -7,7 +7,7 @@ Date: 2026-11-14
 
 Parquet pages are usually compressed. Snappy is Spark's default codec, and
 Zstd is the common choice in newer systems. Neither is in the .NET base class
-library for .NET 8 or .NET 10. Gzip and Brotli are. Managed libraries for
+library for .NET 10. Gzip and Brotli are. Managed libraries for
 Snappy and Zstd exist, but using them makes every consumer take those
 dependencies, and the library cannot control how they allocate memory.
 
@@ -53,8 +53,6 @@ from version 3.5.
   on spans in one call. The Gzip codec may therefore allocate a stream per
   page. This will be measured when it is built.
 - .NET 11, released on 2026-11-10, adds `GZipEncoder` and `ZstandardEncoder`,
-  which compress from one span into another. The library does not rely on
-  them yet. It targets .NET 10, where they do not exist, and the project owner
-  chose to wait. The plan for a Zstd compressor written for this library
-  stands, and the built-in encoder is to be looked at again before that work
-  starts.
+  which compress from one span into another. A later record says the
+  library does not use them yet:
+  [the encoders built into .NET 11](0034-dotnet-built-in-encoders.md).

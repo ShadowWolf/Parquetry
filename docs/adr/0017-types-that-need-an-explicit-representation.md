@@ -49,4 +49,6 @@ that lists the choices.
   and requiring a choice for it would be a burden. It is written as a 32-bit
   integer in every profile. Under the default profile the column is annotated
   as a 16-bit signed integer, which holds every `byte` value and which Spark
-  reads as a short.
+  reads as a short. pyarrow writes an unsigned 8-bit annotation for the same
+  values. Whether to switch to that is an open question, described on the
+  [pyarrow parity](../architecture/pyarrow-parity.md) page.

@@ -30,7 +30,8 @@ Option 1.
 - All pooled buffers are rented through one component that charges the budget
   for the rented size.
 - `Write` never blocks or throws because of the budget. When usage reaches the
-  budget, `NeedsFlush` becomes true.
+  budget, `NeedsFlush` becomes true. A later decision reserves a share of the
+  budget for footer data, and `NeedsFlush` is worked out against the rest.
 - If the caller flushes when `NeedsFlush` is true, the most the writer can go
   over is one row plus one page per column.
 - When a writer is created, the library computes the smallest budget that can
@@ -57,6 +58,7 @@ Option 1.
 - Footer and page index data grow with file size, and a flush cannot free
   them. A share of the budget is reserved for them, under a later decision:
   [reserved memory for footer data](0032-reserved-memory-for-footer-data.md).
-- Two questions are open: how a destination charges the memory it holds, and
-  which writer flushes when several share a budget. Both are described in
+- These questions are open: how a destination charges the memory it holds,
+  which writer flushes when several share a budget, and what happens when the
+  reserved share is used up. All are described in
   [Memory](../architecture/memory.md).

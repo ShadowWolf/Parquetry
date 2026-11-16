@@ -15,7 +15,8 @@ exists yet. Nothing is published on NuGet.
 - Write rows quickly, with no allocation per row.
 - Produce files that Apache Spark, Databricks, pyarrow, Polars, DuckDB, and
   cloud warehouses read without reader settings.
-- Write what pyarrow writes by default, wherever that is possible.
+- Write what pyarrow writes by default, unless there is a recorded reason not
+  to.
 - Use Amazon S3 and Azure Blob Storage features directly through add-on
   packages.
 - Work with dependency injection and configuration, and also without them.

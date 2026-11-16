@@ -37,8 +37,9 @@ Option 1.
 ## Consequences
 
 - The file's schema matches what the C# type says.
-- Data that breaks its own annotations fails the write. The error leaves the
-  file incomplete, and the writer aborts. A user who cannot fix the data
+- Data that breaks its own annotations fails the write. The error ends the
+  write, as every value error does:
+  [a value that cannot be written ends the write](0033-value-error-ends-the-write.md). A user who cannot fix the data
   declares the property nullable.
 - The writer checks for null on every required reference value. The cost is
   one comparison.

@@ -25,13 +25,17 @@ Nothing in the library rents pooled memory any other way.
 The budget is a soft limit:
 
 - `Write` never blocks and never fails because of the budget.
-- When usage reaches the budget, the writer's `NeedsFlush` property becomes
-  true. The caller is expected to call `FlushAsync` before the next `Write`.
+- A share of the budget is reserved for footer data, as described under
+  "The reserved share" below. The rest is the row data part.
+- When usage reaches the limit of the row data part, the writer's `NeedsFlush`
+  property becomes true. The caller is expected to call `FlushAsync` before
+  the next `Write`.
 - If the caller does that, the most the writer can exceed the budget by is one
   row plus one page per column. A caller who does not flush has no limit.
 
 When a writer is created, the library works out the smallest budget that could
-work: enough for one small page per column and working space. If the
+work: enough for one small page per column, working space, and the reserved
+share. If the
 configured budget is lower, creation fails and the error states the computed
 minimum.
 
@@ -43,8 +47,8 @@ early.
 
 | Layout | `NeedsFlush` becomes true when | `FlushAsync` then |
 |---|---|---|
-| Buffered | Usage reaches the budget, or the row group reaches its target size | Closes the row group and writes it to the destination. |
-| Staged | A pending segment reaches the target size, or usage reaches the budget | Stages the segments that reached the target size. If usage is still at the budget, it also stages the largest of the other pending segments until usage is below it. Row groups close by their own size target, independent of the budget. |
+| Buffered | Usage reaches the limit for row data, or the row group reaches its target size | Closes the row group and writes it to the destination. |
+| Staged | A pending segment reaches the target size, or usage reaches the limit for row data | Stages the segments that reached the target size. If usage is still at that limit, it also stages the largest of the other pending segments until usage is below it. Row groups close by their own size target, independent of the budget. |
 
 A destination can make a flush take longer. The S3 destination does this when
 all its upload slots are busy. It has no effect on `NeedsFlush`.
@@ -75,17 +79,28 @@ Three things grow with the size of the file and work against the budget:
 
 ### The reserved share
 
-A share of the budget is set aside for page index and footer records. Row data
-uses the rest, and `NeedsFlush` is worked out against that part only. Growth in
-footer records therefore does not cause extra flushes or smaller row groups.
+A share of the budget is set aside for page index and footer records.
+Everything else in the table at the top of this page is charged to the rest,
+the row data part, and `NeedsFlush` is worked out against that part only.
+While the share has room, growth in footer records does not cause extra
+flushes or smaller row groups. The cost is that the row data part is smaller
+than the budget from the first row.
+
 The size of the share is a setting, with a default to be chosen from
 benchmarks. The amount in use is reported as a metric. A user who turns the
 page index off needs a much smaller share.
 
-What the writer does when the share is used up is not decided: raise an error
-that names the setting, or continue over the budget and report it. The same
-question is open for a staged destination that runs out of segments. Both are
-listed in the [architecture overview](README.md#open-questions).
+So memory for row data is bounded by its part of the budget. Memory for footer
+data is bounded by the reserved share only once the next point is decided.
+
+Still to be decided, and listed in the
+[architecture overview](README.md#open-questions):
+
+- What the writer does when the share is used up: raise an error that names
+  the setting, or continue over the budget and report it.
+- Whether the share is set as a number of bytes or as a fraction of the
+  budget, and how it works when several writers use one budget.
+- What the writer does when a staged destination runs out of segments.
 
 ## Memory held by a destination
 
@@ -134,6 +149,6 @@ design has to say where the parallel work runs. This is an open question.
 
 ## Defaults
 
-The default page size, row group size, dictionary size limit, and memory
-budget are not yet set. They will be chosen from benchmark results when the
+The default page size, row group size, dictionary size limit, memory budget,
+and reserved share are not yet set. They will be chosen from benchmark results when the
 budget is built.
