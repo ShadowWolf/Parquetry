@@ -11,8 +11,10 @@ tested by this project yet. The reader tests described in
 [Testing](testing.md) will do that, and this page should be corrected when they
 disagree with it.
 
-The Spark versions read were 3.3, 3.4, 3.5, 4.0, 4.1, 4.2, and 4.3. "Every
-version checked" on this page means those. Where a table says a feature is
+The Spark versions read were 3.3, 3.4, 3.5, 4.0, and 4.1. "Every version
+checked" on this page means those. A few rows were also checked against 4.2
+and 4.3, and those rows say so. For every other row, 4.2 and 4.3 have not
+been checked. Where a table says a feature is
 readable from 3.3, that is the oldest version checked, and the feature may be
 older.
 
@@ -71,7 +73,7 @@ supported data types but says nothing about Parquet encodings or codecs.
 | DATE | Read. | Read. | Confirmed |
 | Timestamp, milliseconds or microseconds, adjusted to UTC | Read in all versions. | Same. | Confirmed |
 | Timestamp, not adjusted to UTC | 3.3 reads it as a point in time, which is wrong. 3.4 and later read it as a timestamp without time zone. | Supported from runtime 13.3. A Delta table needs the `timestampNtz` feature enabled. | Confirmed |
-| Timestamp, nanoseconds | Error through 4.1, unless the setting `spark.sql.legacy.parquet.nanosAsLong` is enabled. | A Databricks knowledge base article reports the same failure. | Confirmed |
+| Timestamp, nanoseconds | Error in every version checked, unless the setting `spark.sql.legacy.parquet.nanosAsLong` is enabled. | A Databricks knowledge base article reports the same failure. | Confirmed |
 | INT96 timestamp | Read. An older form that new writers should not produce. | Not documented. | Spark confirmed |
 | TIME | Error in 3.x and 4.0. In 4.1, one form is read, and only when a setting that is off by default is enabled. | A TIME type exists in beta from runtime 18. Reading it from Parquet is not documented. | Spark confirmed. Databricks not confirmed. |
 | UUID | Error in every version checked. | Not documented. | Spark confirmed |
@@ -110,7 +112,7 @@ These apply to Spark's vectorized reader.
 | Data page version 2 | 3.3 | Confirmed |
 | DELTA_BINARY_PACKED, DELTA_BYTE_ARRAY | 3.3 | Confirmed |
 | DELTA_LENGTH_BYTE_ARRAY | 3.4 | Confirmed |
-| BYTE_STREAM_SPLIT | 4.3 | Confirmed |
+| BYTE_STREAM_SPLIT | 4.3. Checked as absent in 4.2 and present in 4.3. | Confirmed |
 
 Photon's support for each of these is not documented.
 

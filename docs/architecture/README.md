@@ -47,10 +47,11 @@ If Parquet's terms are new to you, read
    and do no I/O.
 3. Place. The layout decides where the page bytes go. The buffered layout
    keeps them until the row group is complete. The staged layout sends them to
-   storage at the next flush, without waiting for the row group to close.
+   storage in flushes while the row group is still open.
 4. Commit. When a row group closes, the layout reports where each column's
-   bytes ended up, and core writes that row group's bloom filters. At the end
-   of the file, core writes the page index and the footer.
+   bytes ended up, and core writes that row group's bloom filters. When the
+   caller completes the writer, core closes the last row group and writes the
+   page index and the footer.
 
 `Write` does no I/O. I/O happens when the caller flushes or completes the
 writer, and the high-level `WriteAsync` methods flush on the caller's behalf.
@@ -110,7 +111,7 @@ Each of these gets a decision record when it is made.
 |---|---|
 | Should the target frameworks change? .NET 8 reached end of support on 2026-11-10, and .NET 11 was released the same day. | [Target frameworks](../adr/0002-target-frameworks.md) |
 | Should the library use the Zstandard and Gzip encoders that .NET 11 adds, and is a Zstd compressor written for this library still needed? | [Encoding and compression](encoding-and-compression.md) |
-| What does the writer do when page index and footer data, which a flush cannot free, approach the memory budget? | [Memory](memory.md) |
+| What does the writer do when page index and footer data, which a flush cannot free, approach the memory budget, or when a staged destination runs out of segments? | [Memory](memory.md) |
 | When several writers share a budget, which one is asked to flush? | [Memory](memory.md) |
 | How does a destination charge the memory it holds to the budget? | [Memory](memory.md) |
 | Where does parallel encoding run, given that `Write` is synchronous? | [Memory](memory.md) |
@@ -119,9 +120,8 @@ Each of these gets a decision record when it is made.
 | How does a user leave a property out of the file, and can a user supply their own conversion for a type? | [Schema and type mapping](schema-and-type-mapping.md) |
 | Does a string that is not valid text raise an error, or is the invalid part replaced? | [Shredding and the source generator](shredding-and-source-generator.md) |
 | Which ordering is declared for floating-point statistics under each profile: the original one or IEEE 754 total order? | [File format writing](file-format-writing.md) |
-| What exact value is written for the Spark version key? | [File format writing](file-format-writing.md) |
 | What are the default page size, row group size, dictionary size limit, and memory budget? These will be set from benchmarks. | [Memory](memory.md) |
-| For the `Modern` profile: the default codec, whether it writes the Spark version key, how it picks an encoding for a column, and how it annotates `byte`. | [Options and profiles](options-and-profiles.md) |
+| For the `Modern` profile: the default codec, whether it writes the Spark version key, how it picks an encoding for a column, and how it annotates `byte`. | [Options and profiles](options-and-profiles.md#not-yet-decided) |
 | Is a `Databricks` profile needed? Live tests against Databricks will show. | [Options and profiles](options-and-profiles.md) |
 | Who is named as copyright holder in `LICENSE`? It currently names Bryan Wolf. | `LICENSE` |
 
@@ -134,10 +134,12 @@ feature.
 |---|---|
 | The names of the attributes that choose a representation, rename a column, or set decimal precision. | [Schema and type mapping](schema-and-type-mapping.md) |
 | Which members and collection types are written: fields, init-only properties, interfaces such as `IReadOnlyList<T>`. | [Schema and type mapping](schema-and-type-mapping.md) |
-| The text format for a `TimeSpan`, and whether TIME is offered as a choice for it. | [Schema and type mapping](schema-and-type-mapping.md) |
-| How an enum written as text is annotated, and how `[Flags]` combinations and unnamed numbers are written. | [Schema and type mapping](schema-and-type-mapping.md) |
-| Which setting wins when a column is configured both by an attribute and in options, and how options name nested and renamed columns. | [Options and profiles](options-and-profiles.md) |
-| How compatibility messages are reported, how further profiles are registered, and how a codec is registered. | [Options and profiles](options-and-profiles.md) |
+| The text format for a `TimeSpan`, and whether TIME is offered as a choice for it. | [The decision record for TimeSpan](../adr/0027-timespan-needs-an-explicit-representation.md) |
+| How an enum written as text is annotated, and how `[Flags]` combinations and unnamed numbers are written. | [The decision record for enums](../adr/0026-enum-mapping.md) |
+| The exact value written for the Spark version key. | [File format writing](file-format-writing.md) |
+| Which setting wins when a column is configured both by an attribute and in options, and how options name nested and renamed columns. | [Options and profiles](options-and-profiles.md#not-yet-decided) |
+| How compatibility messages are reported and how further profiles are registered. | [Options and profiles](options-and-profiles.md#not-yet-decided) |
+| How a codec supplied by the user is registered. | [Encoding and compression](encoding-and-compression.md) |
 | The interface through which a user supplies encryption keys. | [File format writing](file-format-writing.md) |
 | Whether the writer closes a stream the caller gave it. | [Layouts and destinations](layouts-and-destinations.md) |
 | The exact signatures of the methods that create a writer. | [Public API](public-api.md) |

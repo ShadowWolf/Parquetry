@@ -44,7 +44,7 @@ early.
 | Layout | `NeedsFlush` becomes true when | `FlushAsync` then |
 |---|---|---|
 | Buffered | Usage reaches the budget, or the row group reaches its target size | Closes the row group and writes it to the destination. |
-| Staged | A segment is ready to stage, or pending bytes reach the budget | Stages the ready segments. Row groups close by their own size target, independent of the budget. |
+| Staged | A pending segment reaches the target size, or usage reaches the budget | Stages the segments that reached the target size. If usage is still at the budget, it also stages the largest of the other pending segments until usage is below it. Row groups close by their own size target, independent of the budget. |
 
 A destination can make a flush take longer. The S3 destination does this when
 all its upload slots are busy. It has no effect on `NeedsFlush`.
@@ -53,27 +53,32 @@ With the buffered layout, the budget also caps the row group size. A small
 budget on a table with many columns produces small row groups, which compress
 less well and are slower to read. The writer reports row group sizes as a
 metric. Users who need large row groups with little memory use a staged
-destination: Azure, or the temp-file destination in front of any other
-destination, including S3.
+destination: Azure, or the temp-file destination in front of a sequential
+destination such as S3.
 
 ## What the budget does not bound
 
-Three kinds of memory grow with the size of the file, and a flush does not
-free them:
+Three things grow with the size of the file and work against the budget:
 
 - Page index and footer records. Every page adds a record that is kept until
-  the file is complete.
+  the file is complete. A flush does not free them. They are counted against
+  the budget.
 - S3 part buffers. The part size rises as the upload grows, to stay under
-  10,000 parts.
-- Pending segments in the staged layout. The target segment size rises as the
-  file grows, to stay under the destination's segment limit.
+  10,000 parts. The destination holds this memory. Whether it is counted
+  against the budget depends on the open question in the next section.
+- The segment limit of a staged destination. To stay under it, the staged
+  layout raises its target segment size as the file grows, so each column
+  holds more pending bytes. Those bytes are counted against the budget, and a
+  flush under memory pressure stages them early. Each early segment uses up
+  one of the destination's segments, so a very large file with a small budget
+  can reach the limit.
 
-All three are counted against the budget and reported as metrics. What the
-writer does when they alone approach the budget is not decided. Flushing more
-often would not help, and with the buffered layout it would make row groups
-smaller, which adds metadata faster. The options are to raise an error with a
-clear message, to reserve a share of the budget for this memory, or to leave
-it to the user to start a new file. This is listed in the
+What the writer does when footer records alone approach the budget, or when a
+staged destination runs out of segments, is not decided. Flushing more often
+would not help, and with the buffered layout it would make row groups smaller,
+which adds metadata faster. The options are to raise an error with a clear
+message, to reserve a share of the budget for this memory, or to leave it to
+the user to start a new file. This is listed in the
 [architecture overview](README.md#open-questions).
 
 Until that is decided, the accurate statement is this: memory for row data is
@@ -116,9 +121,10 @@ minimum, before it reports that the budget is too small.
 Shredding a row is single-threaded, and so is the encoding that happens inside
 `Write`. To use more cores, an application runs several writers.
 
-Uploading S3 parts in parallel holds more memory at once. That memory comes
-from the same budget, so turning it on leaves less room for buffered pages and
-does not raise the writer's total.
+Uploading S3 parts in parallel holds more memory at once. That memory is
+meant to come from the same budget, so that turning it on leaves less room for
+buffered pages and does not raise the writer's total. It depends on the open
+question above about memory held by a destination.
 
 Encoding columns in parallel is planned for a late milestone and is not
 designed. `Write` is synchronous and a writer is used from one thread, so the

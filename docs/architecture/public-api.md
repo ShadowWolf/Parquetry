@@ -67,7 +67,7 @@ await writer.CompleteAsync(ct);
 | `NeedsFlush` | True when the writer wants the caller to call `FlushAsync`: the memory budget is reached, or a row group or segment is ready to be sent. Reading it costs one field read. |
 | `FlushAsync` | Sends data to the destination. If `NeedsFlush` is false it returns at once and does not close a row group early. |
 | `WriteAsync` | Calls `Write` for each row and `FlushAsync` whenever `NeedsFlush` is true. |
-| `CompleteAsync` | Writes the page index and footer and completes the destination. The file is valid only after this. |
+| `CompleteAsync` | Closes the last row group, whatever its size, writes the page index and footer, and completes the destination. The file is valid only after this. |
 | `DisposeAsync` | Releases memory. If `CompleteAsync` was not called, aborts the destination. |
 
 `Write` does no I/O. I/O happens in `FlushAsync`, in `CompleteAsync`, in the

@@ -56,7 +56,9 @@ as `string` can still hold null. If the writer finds a null in a required
 column, it raises an error that names the column.
 
 Required columns are smaller and faster to write, because they store no
-definition levels.
+definition levels. A definition level is a small number stored with each value
+of an optional column to record nulls. It is explained in
+[Shredding and the source generator](shredding-and-source-generator.md).
 
 ### Decimal
 
@@ -65,7 +67,7 @@ property. Storage depends on precision: up to 9 digits uses INT32, up to 18
 uses INT64, and more uses fixed-length bytes (16 bytes for precision 38). A
 value that cannot be stored exactly raises an error naming the column. The
 library does not round. The precision can be set from 1 to 38. Spark and
-Delta support no more than 38, and a .NET `decimal` never has more than 29
+Delta Lake, the table format Databricks uses, support no more than 38, and a .NET `decimal` never has more than 29
 digits.
 
 ### DateTime
@@ -80,7 +82,10 @@ digits.
 A column can also be set to store timestamps without a time zone. Under the
 default profile that setting produces a compatibility message, because Spark
 3.3 reads such a column as a point in time and a Delta table needs a feature
-enabled to hold it.
+enabled to hold it. A compatibility message is a finding reported when the
+writer is created. It says that the file can be written but that a reader the
+profile is meant for cannot read it. It is described in
+[Options and profiles](options-and-profiles.md).
 
 Values are stored in microseconds. .NET keeps one more digit, in units of 100
 nanoseconds, and most real values have it: `DateTime.UtcNow` does, and so do
@@ -96,7 +101,7 @@ Truncation is allowed by a writer option, which can also be set per column.
 This matches what pyarrow does when it is asked to write microseconds: it
 raises an error unless `allow_truncated_timestamps` is set. pyarrow's own
 default is different. It writes nanoseconds, which loses nothing but which
-Spark cannot read.
+Spark, in the versions checked, cannot read.
 
 When the digit is dropped, the value moves toward 1970-01-01 00:00:00 UTC,
 which is also what pyarrow does. A value in 1970 or later moves earlier. A
@@ -104,8 +109,9 @@ value before 1970 moves later, and can move into the next second:
 1969-12-31 23:59:59.9999999 becomes 1970-01-01 00:00:00. The change is always
 less than one microsecond.
 
-Under the `Modern` profile a column can be set to nanoseconds. Nanoseconds
-hold every digit of a .NET value, but a 64-bit count of them covers only the
+A column can be set to nanoseconds. The `Modern` profile allows this. Under
+the default profile it produces a compatibility message. Nanoseconds hold
+every digit of a .NET value, but a 64-bit count of them covers only the
 years 1677 to 2262. A value outside that range raises an error naming the
 column. `default(DateTime)`, which is in the year 1, is such a value.
 
@@ -126,8 +132,10 @@ explicit choice, as those types do.
 ## Types that need an explicit choice
 
 A property of one of these types fails the build unless the user chooses how to
-store it. The reason differs by type. Spark cannot read the natural Parquet
-type for `Guid`, `TimeOnly`, and `Half`. Spark reads unsigned integers as a
+store it. The reason differs by type. In the versions checked, Spark cannot
+read the natural Parquet type for `Guid`, `TimeOnly`, and `Half`. The versions
+and the details are in
+[Spark and Databricks compatibility](spark-and-databricks-compatibility.md). Spark reads unsigned integers as a
 wider signed type, and Delta tables have no unsigned types. Parquet has no
 type for a length of time that the verified readers accept.
 

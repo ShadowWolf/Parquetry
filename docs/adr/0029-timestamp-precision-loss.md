@@ -8,7 +8,7 @@ Date: 2026-11-14
 .NET stores `DateTime`, `DateTimeOffset`, and `TimeSpan` in units of 100
 nanoseconds, so a value has seven decimal digits of a second. The default
 profile stores timestamps in microseconds, which have six, because Spark
-cannot read nanosecond timestamps. A value whose seventh digit is not zero
+cannot read nanosecond timestamps in any version checked, 3.3 through 4.1. A value whose seventh digit is not zero
 cannot be stored exactly.
 
 Most real values are affected. `DateTime.UtcNow` has 100-nanosecond
@@ -52,8 +52,9 @@ Both match what pyarrow does when it writes microseconds.
   value moves toward zero.
 - A `TimeOnly` stored in microseconds follows the same rule. Its value moves
   toward midnight.
-- A column stored in nanoseconds, which the `Modern` profile allows, keeps
-  every digit of a .NET value, so this rule does not apply to it. Its range is
+- A column stored in nanoseconds keeps every digit of a .NET value, so this
+  rule does not apply to it. The `Modern` profile allows such a column, and
+  under the default profile it produces a compatibility message. Its range is
   smaller, though: a 64-bit count of nanoseconds covers only the years 1677 to
   2262. A value outside that range raises an error that names the column.
 

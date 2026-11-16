@@ -24,8 +24,9 @@ Option 2. Core defines:
 - A sequential destination, which accepts bytes in order.
 - A staged destination, which accepts segments in any order, returns an
   identifier for each, and later receives the list of identifiers in final
-  order. It also states its limits: the largest segment and the largest number
-  of segments. It must accept a segment of any smaller size.
+  order. It also states its limits: the largest segment, the largest number
+  of segments, and how many uploads may run at once. It must accept a segment
+  of any smaller size.
 
 A `Stream` is wrapped as a sequential destination. The temp-file spill is a
 staged destination that writes to a sequential one. Azure is staged. S3 is

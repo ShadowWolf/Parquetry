@@ -72,12 +72,13 @@ upload, and `AbortAsync` cancels it.
 
 ### Temp files
 
-The temp-file destination is a staged destination that sits in front of
-another destination. It appends each staged segment to a local temp file and
-records where it is. When segments are sealed, it copies them in the sealed
-order into the inner destination. This keeps memory use low for any inner
-destination, including S3, at the cost of local disk space and a second copy
-of the data.
+The temp-file destination is a staged destination that sits in front of a
+sequential destination, such as a stream or S3. It appends each staged segment
+to a local temp file and records where it is. When segments are sealed, it
+copies them in the sealed order into the inner destination. This keeps memory
+use low for any sequential destination, at the cost of local disk space and a
+second copy of the data. Azure does not need it, because Azure is already a
+staged destination.
 
 A user turns this on by wrapping their destination. The sketch below shows the
 idea. The names are not final.
@@ -105,9 +106,13 @@ The staged layout works with a staged destination. It does not wait for the
 row group to close before sending data.
 
 While a row group is open, each column has a pending segment that collects the
-column's finished pages. During `FlushAsync`, the layout stages every pending
-segment that has reached the target size. A segment staged this way holds
-pages of one column only.
+column's finished pages. The layout has a target segment size. It works the
+target out from the destination's limits, and its starting value will be set
+from benchmarks. During `FlushAsync`, the layout stages every pending segment
+that has reached the target size. If memory use is still at the budget after
+that, it also stages the largest of the remaining pending segments, below the
+target size, until usage is under the budget. A segment staged during a flush
+holds pages of one column only.
 
 When the row group closes, each column has two things left in memory: its
 dictionary page, which is only complete now, and the pages that were not yet
@@ -158,8 +163,8 @@ encrypted files are otherwise never identical.
 
 ## Completing, aborting, and failures
 
-`CompleteAsync` on the writer writes the page index and footer and then
-completes the destination. If the writer is disposed without that call, it
+`CompleteAsync` on the writer closes the last row group, whatever its size,
+writes the page index and footer, and then completes the destination. If the writer is disposed without that call, it
 aborts the destination.
 
 | Destination | After an abort |

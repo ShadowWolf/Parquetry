@@ -12,7 +12,8 @@ know which point in time it means. Many database drivers return unspecified
 values.
 
 .NET stores time in units of 100 nanoseconds. The default profile stores
-microseconds, because Spark cannot read nanosecond timestamps.
+microseconds, because Spark cannot read nanosecond timestamps in any version
+checked, 3.3 through 4.1.
 
 ## Options considered
 

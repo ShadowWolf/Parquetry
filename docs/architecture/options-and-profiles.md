@@ -11,7 +11,7 @@ readers can read the output.
 | Data page version | 1 | 2 |
 | Encodings | PLAIN, dictionary | Adds the delta encodings and BYTE_STREAM_SPLIT |
 | Default codec | Snappy | To be decided |
-| Timestamps | Microseconds, UTC | Microseconds, UTC. Nanoseconds are allowed. |
+| Timestamps | Microseconds, UTC. Nanoseconds produce a compatibility message if chosen. | Microseconds, UTC. Nanoseconds are allowed. |
 | UUID, TIME, FLOAT16, unsigned annotations, fixed-length bytes with no annotation | Compatibility message if chosen | Allowed |
 | Spark version key in metadata | Written | To be decided |
 | Page index | Written | Written |
@@ -91,3 +91,14 @@ By default, compatibility messages are reported and the writer is still
 created. A strict setting turns them into errors. How messages are reported
 (a callback, a diagnostic event, or both) will be settled when validation is
 built.
+
+## Not yet decided
+
+- For the `Modern` profile: its default codec, whether it writes the Spark
+  version key, how it picks an encoding for a column, and whether it annotates
+  a `byte` column as unsigned.
+- Whether a `Databricks` profile is needed.
+- Which setting wins when a column is configured both by an attribute and in
+  `Columns`, and how `Columns` names a nested column or a renamed one.
+- How compatibility messages are reported.
+- How a user registers a profile of their own.

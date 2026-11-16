@@ -44,9 +44,10 @@ Option 1.
   and use after return.
 - A destination must not keep a reference to the caller's memory after its
   write call completes.
-- Parallel uploads take their memory from the same budget. Turning them on
-  reduces the space left for buffered pages. It does not raise total memory
-  use. Parallel encoding is planned to work the same way and is not designed
+- Parallel uploads are meant to take their memory from the same budget, so
+  that turning them on reduces the space left for buffered pages and does not
+  raise total memory use. The upload buffers belong to the destination, and
+  how a destination charges the budget is one of the open questions below. Parallel encoding is planned to work the same way and is not designed
   yet.
 - A table with many columns has a minimum memory need that grows with the
   column count. Page size is reduced automatically when the budget is tight.
