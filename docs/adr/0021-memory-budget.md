@@ -47,16 +47,16 @@ Option 1.
 - Parallel uploads are meant to take their memory from the same budget, so
   that turning them on reduces the space left for buffered pages and does not
   raise total memory use. The upload buffers belong to the destination, and
-  how a destination charges the budget is one of the open questions below. Parallel encoding is planned to work the same way and is not designed
-  yet.
+  how a destination charges the budget is one of the open questions below.
+  Parallel encoding is planned to work the same way and is not designed yet.
 - A table with many columns has a minimum memory need that grows with the
   column count. Page size is reduced automatically when the budget is tight.
 - With in-memory buffering, the budget limits row group size. The writer
   reports row group sizes as a metric so users can see when the budget is
   making row groups small.
-- Footer and page index data grow with file size. They are counted in the
-  budget, but a flush cannot free them. What the writer does when they alone
-  approach the budget is an open question. So are two others: how a
-  destination charges the memory it holds, and which writer flushes when
-  several share a budget. All three are described in
+- Footer and page index data grow with file size, and a flush cannot free
+  them. A share of the budget is reserved for them, under a later decision:
+  [reserved memory for footer data](0032-reserved-memory-for-footer-data.md).
+- Two questions are open: how a destination charges the memory it holds, and
+  which writer flushes when several share a budget. Both are described in
   [Memory](../architecture/memory.md).

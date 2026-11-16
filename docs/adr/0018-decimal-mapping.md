@@ -38,6 +38,6 @@ an error that names the column. The library does not round.
   value. A precision of 9 or less uses 4 bytes.
 - Checking each value costs a little time on every write.
 - An error while writing ends the write. The error is raised partway through
-  a row, the writer cannot continue, and the file is aborted. Whether the
-  writer should undo the partial row instead is an open question, listed in
-  the [architecture overview](../architecture/README.md#open-questions).
+  a row, the writer cannot continue, and the file is aborted. That rule has
+  its own record:
+  [a value that cannot be written ends the write](0033-value-error-ends-the-write.md).

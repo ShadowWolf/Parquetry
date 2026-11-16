@@ -61,8 +61,8 @@ destination such as S3.
 Three things grow with the size of the file and work against the budget:
 
 - Page index and footer records. Every page adds a record that is kept until
-  the file is complete. A flush does not free them. They are counted against
-  the budget.
+  the file is complete. A flush does not free them. A share of the budget is
+  reserved for them, as described below.
 - S3 part buffers. The part size rises as the upload grows, to stay under
   10,000 parts. The destination holds this memory. Whether it is counted
   against the budget depends on the open question in the next section.
@@ -73,17 +73,19 @@ Three things grow with the size of the file and work against the budget:
   one of the destination's segments, so a very large file with a small budget
   can reach the limit.
 
-What the writer does when footer records alone approach the budget, or when a
-staged destination runs out of segments, is not decided. Flushing more often
-would not help, and with the buffered layout it would make row groups smaller,
-which adds metadata faster. The options are to raise an error with a clear
-message, to reserve a share of the budget for this memory, or to leave it to
-the user to start a new file. This is listed in the
-[architecture overview](README.md#open-questions).
+### The reserved share
 
-Until that is decided, the accurate statement is this: memory for row data is
-bounded by the budget, and memory for metadata and upload buffers grows slowly
-with the file.
+A share of the budget is set aside for page index and footer records. Row data
+uses the rest, and `NeedsFlush` is worked out against that part only. Growth in
+footer records therefore does not cause extra flushes or smaller row groups.
+The size of the share is a setting, with a default to be chosen from
+benchmarks. The amount in use is reported as a metric. A user who turns the
+page index off needs a much smaller share.
+
+What the writer does when the share is used up is not decided: raise an error
+that names the setting, or continue over the budget and report it. The same
+question is open for a staged destination that runs out of segments. Both are
+listed in the [architecture overview](README.md#open-questions).
 
 ## Memory held by a destination
 

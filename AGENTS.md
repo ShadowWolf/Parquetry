@@ -81,5 +81,9 @@ The pull request must then say which steps were skipped.
   one.
 - A new architectural decision gets a decision record in `docs/adr` in the
   same pull request.
+- Where a choice has to be made about what is written to a file, find out what
+  pyarrow writes by running it, and match it unless there is a reason not to.
+  Record the reason. `docs/architecture/pyarrow-parity.md` lists the
+  comparisons made so far.
 
 Build and test commands will be added here when the solution is created.

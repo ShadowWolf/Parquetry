@@ -142,7 +142,7 @@ type for a length of time that the verified readers accept.
 | .NET type | Choices |
 |---|---|
 | `Guid` | Text (36 characters). 16 fixed-length bytes with the UUID annotation. 16 fixed-length bytes with no annotation. |
-| `TimeOnly` | TIME in microseconds. A 64-bit count of microseconds since midnight with no annotation. Text. |
+| `TimeOnly` | TIME in microseconds, marked as not adjusted to UTC, as pyarrow writes it. A 64-bit count of microseconds since midnight with no annotation. Text. |
 | `Half` | FLOAT, which holds every `Half` value exactly. FLOAT16. |
 | `ushort`, `uint`, `ulong` | The next wider signed type (`ulong` becomes a 20-digit decimal). The unsigned annotation. |
 | `TimeSpan` | A 64-bit count of microseconds. A 64-bit count of ticks (units of 100 nanoseconds), which keeps every value exactly. Text. |
@@ -241,6 +241,8 @@ rejects them unless its column mapping feature is turned on.
 
 | Question | Notes |
 |---|---|
+| Should `byte` be annotated as an unsigned 8-bit integer? | pyarrow, Parquet.Net, and ParquetSharp all write it that way. See [pyarrow parity](pyarrow-parity.md). |
+| Should decimals of 18 digits or fewer be stored as fixed-length bytes? | pyarrow does this by default. See [pyarrow parity](pyarrow-parity.md). |
 | How does a user leave a property out of the file? | Needed for properties of unsupported types. |
 | Can a user supply their own conversion for a type? | It would let the unsupported types be handled once per type and not once per property. |
 

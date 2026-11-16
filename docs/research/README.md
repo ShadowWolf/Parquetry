@@ -36,5 +36,15 @@ uv run --no-project --with pyarrow --with pandas python docs/research/pyarrow-ti
 Its results are quoted in the decision record on
 [timestamp precision](../adr/0029-timestamp-precision-loss.md).
 
-Both programs write their output files next to where they run. Those files are
+`pyarrow-parity-probe.py` writes one small file with pyarrow for each case the
+library has a decision about, and prints the schema, the statistics, and
+pyarrow's default settings. It was run on 2026-11-16 with pyarrow 26.0.1.
+
+```
+uv run --no-project --with pyarrow python docs/research/pyarrow-parity-probe.py
+```
+
+Its results are in [pyarrow parity](../architecture/pyarrow-parity.md).
+
+The programs write their output files next to where they run. Those files are
 not kept.

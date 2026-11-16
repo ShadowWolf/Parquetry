@@ -49,11 +49,12 @@ from version 3.5.
 - The codec interface compresses a whole page from one span into another, and
   each column gets its own compressor instance so working memory can be reused
   without locks.
-- On .NET 8 and .NET 10 the base class library has no gzip encoder that works
+- On .NET 10 the base class library has no gzip encoder that works
   on spans in one call. The Gzip codec may therefore allocate a stream per
   page. This will be measured when it is built.
 - .NET 11, released on 2026-11-10, adds `GZipEncoder` and `ZstandardEncoder`,
-  which compress from one span into another. This record was written without
-  taking them into account. Whether to use them, and whether a Zstd compressor
-  written for this library is still needed, is an open question, listed in
-  the [architecture overview](../architecture/README.md#open-questions).
+  which compress from one span into another. The library does not rely on
+  them yet. It targets .NET 10, where they do not exist, and the project owner
+  chose to wait. The plan for a Zstd compressor written for this library
+  stands, and the built-in encoder is to be looked at again before that work
+  starts.

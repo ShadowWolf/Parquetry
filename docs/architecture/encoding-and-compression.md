@@ -95,6 +95,6 @@ cases. Benchmarks compare speed and ratio with existing managed libraries.
 
 .NET 11, released on 2026-11-10, adds `ZstandardEncoder` and `GZipEncoder` to
 the base class library. Both compress from one span into another. Neither
-exists on .NET 8 or .NET 10. Whether the library should use them, and what
-that means for the plan to write its own Zstd compressor, is an open question,
-listed in the [architecture overview](README.md#open-questions).
+exists on .NET 10, which is what the library targets, so the library does not
+use them. The plan to write a Zstd compressor for this library stands. The
+built-in encoder should be looked at again before that work starts.

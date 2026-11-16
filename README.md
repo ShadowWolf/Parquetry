@@ -15,6 +15,7 @@ exists yet. Nothing is published on NuGet.
 - Write rows quickly, with no allocation per row.
 - Produce files that Apache Spark, Databricks, pyarrow, Polars, DuckDB, and
   cloud warehouses read without reader settings.
+- Write what pyarrow writes by default, wherever that is possible.
 - Use Amazon S3 and Azure Blob Storage features directly through add-on
   packages.
 - Work with dependency injection and configuration, and also without them.
@@ -29,7 +30,7 @@ exists yet. Nothing is published on NuGet.
 | `Parquetry.Extensions.DependencyInjection` | Service registration, configuration binding, named options. |
 | `Parquetry.Sync` | Synchronous wrappers for callers that cannot use async code. |
 
-The library targets .NET 8 and .NET 10.
+The library targets .NET 10.
 
 ## Planned usage
 

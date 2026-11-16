@@ -29,7 +29,7 @@ title or a link may follow. A bare number is not enough.
 | File | Decision |
 |---|---|
 | [0001](0001-name-and-license.md) | The library is named Parquetry and licensed under MIT. |
-| [0002](0002-target-frameworks.md) | Target .NET 8 and .NET 10. |
+| [0002](0002-target-frameworks.md) | Target .NET 8 and .NET 10. Replaced by 0030. |
 | [0003](0003-write-only-scope.md) | The library writes Parquet and does not read it. |
 | [0004](0004-row-group-layout-strategies.md) | Core chooses one of several strategies for laying out a row group, with in-memory buffering as the default. |
 | [0005](0005-destination-shapes.md) | Core defines two kinds of destination: sequential and staged. |
@@ -57,3 +57,7 @@ title or a link may follow. A bare number is not enough.
 | [0027](0027-timespan-needs-an-explicit-representation.md) | TimeSpan needs an explicit representation. |
 | [0028](0028-unsupported-types-in-first-release.md) | char, Int128, UInt128, and BigInteger are not supported in the first release. |
 | [0029](0029-timestamp-precision-loss.md) | A timestamp that does not fit in microseconds raises an error unless truncation is allowed. |
+| [0030](0030-target-dotnet-10.md) | Target .NET 10 only. |
+| [0031](0031-pyarrow-as-reference.md) | pyarrow is the reference for how values are written. |
+| [0032](0032-reserved-memory-for-footer-data.md) | A share of the memory budget is reserved for footer and page index data. |
+| [0033](0033-value-error-ends-the-write.md) | A value that cannot be written ends the write. |

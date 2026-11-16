@@ -88,14 +88,13 @@ a null in a required column, a decimal that does not fit its precision and
 scale, or a timestamp that would lose precision. The error names the column.
 
 The error is raised partway through the row, after some columns have already
-received their values. As designed, the writer cannot continue after it. The
-caller disposes the writer, which aborts the file. One bad value therefore
-ends the whole write.
+received their values. The writer cannot continue after it. Every method
+except `DisposeAsync` then raises an error, and disposing aborts the file. One
+bad value therefore ends the whole write. A caller who expects bad data checks
+or cleans rows before writing them.
 
-Whether the writer should instead undo the partial row, so that the caller can
-skip the row and continue, is an open question. So is the state of the writer
-after `FlushAsync` or `CompleteAsync` fails. Both are listed in the
-[architecture overview](README.md#open-questions).
+The state of the writer after `FlushAsync` or `CompleteAsync` fails is an open
+question, listed in the [architecture overview](README.md#open-questions).
 
 ## Dependency injection
 

@@ -1,6 +1,6 @@
 # Target .NET 8 and .NET 10
 
-Status: accepted
+Status: replaced by [Target .NET 10 only](0030-target-dotnet-10.md)
 Date: 2026-11-14
 
 ## Context
@@ -34,5 +34,4 @@ Target `net8.0` and `net10.0`.
   need.
 - .NET 8 reached the end of Microsoft's support on 2026-11-10, and .NET 11 was
   released the same day. This record was written without taking either into
-  account. Whether the targets should change is an open question, listed in
-  the [architecture overview](../architecture/README.md#open-questions).
+  account, which is why it was replaced.
