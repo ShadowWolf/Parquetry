@@ -7,16 +7,19 @@ readers can read the output.
 
 | Setting | `Compatible` (default) | `Modern` |
 |---|---|---|
-| Intended readers | Spark 3.3 and later, Databricks, Arrow-based tools, cloud warehouses | Current Arrow-based tools and other readers that support the newer format features |
+| Intended readers | Spark 3.5 and later, Databricks, pyarrow, Polars, DuckDB, and cloud warehouses. Spark 3.3 and 3.4 are expected to work, from reading Spark's source, but are not tested. | Current versions of pyarrow, Polars, and DuckDB, and other readers that support the newer format features |
 | Data page version | 1 | 2 |
 | Encodings | PLAIN, dictionary | Adds the delta encodings and BYTE_STREAM_SPLIT |
 | Default codec | Snappy | To be decided |
 | Timestamps | Microseconds, UTC | Microseconds, UTC. Nanoseconds are allowed. |
-| UUID, TIME, FLOAT16, unsigned annotations | Validation message if chosen | Allowed |
+| UUID, TIME, FLOAT16, unsigned annotations, fixed-length bytes with no annotation | Compatibility message if chosen | Allowed |
 | Spark version key in metadata | Written | To be decided |
 | Page index | Written | Written |
 
-A profile is an object with a name, so more can be added later. A `Databricks`
+A profile is an object with a name, and core holds the built-in ones under
+their names. Options refer to a profile by name, as text, so that the choice
+can come from a configuration file. More profiles can be added later without
+changing existing code. A `Databricks`
 profile will be added if testing shows that Databricks needs different settings
 from Spark.
 
@@ -31,7 +34,7 @@ public sealed class ParquetWriterOptions
     public string Profile { get; set; } = "Compatible";
     public DataPageVersion? DataPageVersion { get; set; }
     public CompressionKind? Compression { get; set; }
-    public long MemoryBudgetBytes { get; set; }
+    public long? MemoryBudgetBytes { get; set; }
     public RowGroupOptions RowGroup { get; }
     public Dictionary<string, ColumnOptions> Columns { get; }
     // ...
@@ -61,10 +64,15 @@ override earlier ones.
 The result is checked and frozen. The writer uses the frozen result and ignores
 later changes to the options object.
 
+Some column settings can also be given by an attribute on a property or on a
+context class. How those combine with per-column options is not settled yet.
+
 ## Validation
 
 Validation runs once, when the writer is created, against the schema of the
-type being written. It collects every problem and reports them together.
+type being written. It collects every problem and reports them together. The
+dependency injection package also runs the checks that need no row type when
+the application starts.
 
 There are two kinds of finding.
 
@@ -72,10 +80,11 @@ An error means the file cannot be written as configured. Examples: a memory
 budget below the minimum for the number of columns, a decimal precision of
 zero, a bloom filter on a column that does not exist.
 
-A compatibility message means the file can be written, but a reader the profile
-is meant for cannot read it. Examples under the default profile: LZ4_RAW
-compression, a `Guid` column stored with the UUID annotation, a column name
-containing a space. Each message names the setting, the column if there is one,
+A compatibility message means the file can be written, but a reader or table
+format the profile is meant for cannot read it or will reject it. Examples
+under the default profile: LZ4_RAW compression, a `Guid` column stored with
+the UUID annotation, a column name containing a space, which a Delta table
+rejects. Each message names the setting, the column if there is one,
 and the reader affected.
 
 By default, compatibility messages are reported and the writer is still

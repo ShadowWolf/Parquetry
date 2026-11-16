@@ -24,7 +24,7 @@ Option 1.
 
 ```csharp
 // High level
-await using var writer = factory.Create<Order>(destination);
+await using var writer = ParquetWriter.Create<Order>(destination, options);
 await writer.WriteAsync(ordersAsyncEnumerable, ct);
 await writer.WriteAsync(batchMemory, ct);
 
@@ -42,7 +42,9 @@ await writer.CompleteAsync(ct);
 
 - `Write` does no I/O. It reads the row, appends values to column buffers, and
   encodes and compresses a page when a buffer fills.
-- All I/O happens in `FlushAsync` and `CompleteAsync`.
+- I/O happens in `FlushAsync` and `CompleteAsync`. The high-level methods
+  call `FlushAsync` themselves, and disposing a writer that was not completed
+  aborts the destination.
 - `NeedsFlush` means the caller should call `FlushAsync` before the next
   `Write` to stay within the memory budget. Reading it costs one field read.
 - A caller who ignores `NeedsFlush` uses more memory but still gets a correct

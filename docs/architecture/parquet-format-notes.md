@@ -16,14 +16,18 @@ row group 1
     data page, data page, ...
   column chunk for column 2
   ...
+  bloom filters for row group 1 (optional)
 row group 2
 ...
 page index (optional)
-bloom filters (optional; may also sit elsewhere)
 footer                      schema, row groups, positions of every column chunk
 footer length               4 bytes
 "PAR1"                      4 bytes that mark the end
 ```
+
+The format also allows all bloom filters to sit together after the last row
+group. This library puts each row group's filters after that row group. A file
+with an encrypted footer has "PARE" in place of "PAR1" at both ends.
 
 A row group is a horizontal slice of the data: some number of rows. Inside a
 row group, the data is stored one column at a time. The stored data for one
@@ -46,7 +50,8 @@ The bytes of a page do not contain file positions. Each page begins with a
 small header that gives its sizes and encoding. Positions appear only in the
 footer and the page index, and those are written last. A writer can therefore
 produce the bytes of a chunk before it knows where in the file the chunk will
-be.
+be. In an encrypted file, each page is also tied to the number of its row
+group and column, though still not to a byte position.
 
 Together these mean that the writer may produce chunks in any order and in any
 place, provided each chunk is contiguous in the final file and the footer
@@ -81,5 +86,6 @@ part limit.
 
 With Azure, one block per column per row group can exceed 50,000 blocks for a
 table with many columns and many row groups. The staged layout therefore treats
-a block as a range of bytes that may hold several small column chunks, and
-makes blocks larger as the count rises.
+a block as a range of bytes that need not match a column chunk. A block may
+hold several small chunks, or the end of one chunk and the start of the next.
+The layout makes blocks larger as the count rises.

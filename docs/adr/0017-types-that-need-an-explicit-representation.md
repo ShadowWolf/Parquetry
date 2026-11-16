@@ -5,7 +5,8 @@ Date: 2026-11-14
 
 ## Context
 
-Some .NET types map naturally to a Parquet type that Spark cannot read:
+Some .NET types map naturally to a Parquet type that Spark cannot read, or
+reads as a different type:
 
 | .NET type | Natural Parquet type | Problem |
 |---|---|---|

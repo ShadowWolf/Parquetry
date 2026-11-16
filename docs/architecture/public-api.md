@@ -1,7 +1,38 @@
 # Public API
 
-The examples here show the intended shape of the API. Names may change before
-the first release.
+The examples here show the intended shape of the API. Names and signatures may
+change before the first release.
+
+## Creating a writer
+
+A writer is created with a static method on `ParquetWriter`. The form depends
+on how the row type was registered, as described in
+[Shredding and the source generator](shredding-and-source-generator.md).
+
+```csharp
+// A type marked with [ParquetSerializable]
+await using var writer = ParquetWriter.Create<Order>(destination, options);
+
+// A type listed on a context class
+await using var writer = ParquetWriter.Create(
+    destination, MyParquetContext.Default.ThirdPartyDto, options);
+
+// A type the source generator has not seen. Not usable under Native AOT.
+await using var writer = ParquetWriter.CreateDynamic<LateBoundRow>(destination, options);
+```
+
+The first form needs no reflection. The generator adds a member to the marked
+type, which is why the type must be `partial`, and `Create<T>` reaches the
+generated code through it. A type on a context class cannot be changed, so the
+context exposes an object for it and the caller passes that object.
+
+The third form builds its code when the writer is created. It has a different
+name so that a caller cannot fall into it by accident, and the compiler warns
+when it is used in a Native AOT or trimmed build.
+
+The destination is a `Stream` or any destination object. The S3 and Azure
+packages provide ways to create their destinations from the respective SDK
+clients. The options argument can be left out.
 
 ## Writing
 
@@ -10,8 +41,6 @@ There are two ways to write rows.
 The high-level methods take a sequence or a batch and flush when needed:
 
 ```csharp
-await using var writer = ParquetWriter.Create<Order>(destination, options);
-
 await writer.WriteAsync(ordersAsyncEnumerable, ct);   // IAsyncEnumerable<Order>
 await writer.WriteAsync(ordersEnumerable, ct);        // IEnumerable<Order>
 await writer.WriteAsync(batch, ct);                   // ReadOnlyMemory<Order>
@@ -35,10 +64,14 @@ await writer.CompleteAsync(ct);
 | Member | Behavior |
 |---|---|
 | `Write(in T)` | Shreds the row into column buffers. Encodes and compresses a page when a buffer fills. No I/O, no allocation. |
-| `NeedsFlush` | True when the caller should flush to stay within the memory budget. |
-| `FlushAsync` | Sends buffered data to the destination. Returns immediately if there is nothing to send. |
+| `NeedsFlush` | True when the writer wants the caller to call `FlushAsync`: the memory budget is reached, or a row group or segment is ready to be sent. Reading it costs one field read. |
+| `FlushAsync` | Sends data to the destination. If `NeedsFlush` is false it returns at once and does not close a row group early. |
+| `WriteAsync` | Calls `Write` for each row and `FlushAsync` whenever `NeedsFlush` is true. |
 | `CompleteAsync` | Writes the page index and footer and completes the destination. The file is valid only after this. |
 | `DisposeAsync` | Releases memory. If `CompleteAsync` was not called, aborts the destination. |
+
+`Write` does no I/O. I/O happens in `FlushAsync`, in `CompleteAsync`, in the
+`WriteAsync` methods because they flush, and in `DisposeAsync` when it aborts.
 
 A caller who never checks `NeedsFlush` still gets a correct file, but the
 writer's memory use is then not bounded.
@@ -48,19 +81,21 @@ that interface requires. The other forms have no async overhead per row.
 
 A writer is not safe to use from several threads at once.
 
-## Types known and unknown at build time
+## Errors while writing
 
-A type registered with the source generator is written with generated code,
-which works under Native AOT. A type the generator has not seen needs the
-runtime fallback, which does not. The two use different method names, so a
-caller cannot fall into the runtime path by accident, and the compiler warns
-when the runtime method is used in an AOT or trimmed build.
+`Write` raises an error when a value cannot be stored as the schema requires:
+a null in a required column, a decimal that does not fit its precision and
+scale, or a timestamp that would lose precision. The error names the column.
 
-## Destinations
+The error is raised partway through the row, after some columns have already
+received their values. As designed, the writer cannot continue after it. The
+caller disposes the writer, which aborts the file. One bad value therefore
+ends the whole write.
 
-`ParquetWriter.Create` accepts a `Stream` or any destination. The S3 and Azure
-packages provide ways to create their destinations from the respective SDK
-clients.
+Whether the writer should instead undo the partial row, so that the caller can
+skip the row and continue, is an open question. So is the state of the writer
+after `FlushAsync` or `CompleteAsync` fails. Both are listed in the
+[architecture overview](README.md#open-questions).
 
 ## Dependency injection
 
@@ -79,8 +114,12 @@ services.AddParquetWriter("exports", configuration.GetSection("Parquet:Exports")
 ```
 
 It registers a writer factory, which creates writers from the configured
-options. Options are validated when the application starts. Named
-registrations let one application hold several configurations.
+options. Named options let one application hold several configurations.
+
+Checks that need no row type run when the application starts: that the profile
+exists, that the codec is known, that the numbers are in range. Checks that
+depend on the row type, such as column names and the smallest workable budget,
+run when a writer is created, as they do without this package.
 
 ## Synchronous package
 

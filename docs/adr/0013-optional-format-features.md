@@ -35,15 +35,26 @@ All three are in the first release.
 - The page index is on by default in both profiles, because readers that do
   not use it ignore it. It can be turned off.
 - Bloom filters use memory for every column that has one for as long as the
-  row group is open. They are off unless the user turns them on for a column.
+  row group is open. Each row group's filters are written directly after that
+  row group, which the format allows, so they are not held until the end of
+  the file. They are off unless the user turns them on for a column.
 - Bloom filters need the xxHash64 function, which is not in the base class
   library. Core implements it.
-- Encryption uses the AES implementation in the base class library. Core
-  defines how the user supplies keys. It does not include integrations with
-  key management services.
+- Encryption uses the AES implementation in the base class library. The base
+  class library has no counter mode, which one of the format's two algorithms
+  needs, so core builds it from single-block AES. Core defines how the user
+  supplies keys. It does not include integrations with key management
+  services.
+- Encryption covers more than page data. For an encrypted column it also
+  covers page headers, the column's statistics in the footer, its part of the
+  page index, and its bloom filter. It also limits a file to 32,767 row
+  groups. The details are in
+  [File format writing](../architecture/file-format-writing.md).
 - An encrypted file always needs keys configured on the reader. This is the one
   case where the default profile's promise of "no reader settings" cannot hold.
 - Wrong statistics make readers skip rows that match a query, and nothing
   reports the error. Tests run filtered queries in Spark and DuckDB to check
-  that no rows are lost. Where the correct statistic is uncertain, such as
-  for NaN values, it is left out.
+  that no rows are lost. Where the correct statistic is uncertain, it is left
+  out. The format's rules for NaN values are followed, including the rule
+  that a column chunk with an all-NaN page gets no value ranges in the page
+  index.

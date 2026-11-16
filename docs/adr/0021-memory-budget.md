@@ -31,7 +31,8 @@ Option 1.
   for the rented size.
 - `Write` never blocks or throws because of the budget. When usage reaches the
   budget, `NeedsFlush` becomes true.
-- The most the writer can go over is one row plus one page per column.
+- If the caller flushes when `NeedsFlush` is true, the most the writer can go
+  over is one row plus one page per column.
 - When a writer is created, the library computes the smallest budget that can
   work for the number of columns and fails if the configured budget is lower.
   The error states the computed minimum.
@@ -43,13 +44,18 @@ Option 1.
   and use after return.
 - A destination must not keep a reference to the caller's memory after its
   write call completes.
-- Parallel encoding and parallel uploads reserve their memory from the same
-  budget. Turning them on reduces the space left for buffered pages. It does
-  not raise total memory use.
+- Parallel uploads take their memory from the same budget. Turning them on
+  reduces the space left for buffered pages. It does not raise total memory
+  use. Parallel encoding is planned to work the same way and is not designed
+  yet.
 - A table with many columns has a minimum memory need that grows with the
   column count. Page size is reduced automatically when the budget is tight.
 - With in-memory buffering, the budget limits row group size. The writer
   reports row group sizes as a metric so users can see when the budget is
   making row groups small.
 - Footer and page index data grow with file size. They are counted in the
-  budget.
+  budget, but a flush cannot free them. What the writer does when they alone
+  approach the budget is an open question. So are two others: how a
+  destination charges the memory it holds, and which writer flushes when
+  several share a budget. All three are described in
+  [Memory](../architecture/memory.md).

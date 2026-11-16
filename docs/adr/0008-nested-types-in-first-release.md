@@ -28,9 +28,10 @@ and maps, nested to any depth.
 
 - The source generator produces level values from the start.
 - Lists use the standard three-level layout and maps use a repeated
-  `key_value` group with a required key. These are the forms Spark and
-  Arrow-based readers expect.
-- Empty nested objects (a class with no writable properties) cannot be written.
+  `key_value` group with a required key. These are the forms Spark and the
+  other verified readers expect.
+- Empty nested objects (a class with no properties that can be written to the
+  file) cannot be written.
   The generator reports them as an error.
 - A type that contains itself is a build error.
 - Nesting is built and tested with hand-written code first. That code then

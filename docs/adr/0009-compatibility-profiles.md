@@ -34,8 +34,10 @@ per-column options, then validation.
   added without breaking existing code.
 - The first release has two profiles: `Compatible`, which is the default, and
   `Modern`, which uses newer format features.
-- An override outside the profile produces a validation message. A strict
+- An override outside the profile produces a compatibility message. A strict
   setting turns those messages into errors.
 - Validation reports all problems at once, so a user does not fix them one at
   a time.
-- Each profile's claims are backed by tests against the readers it names.
+- Each profile's claims are meant to be backed by tests against the readers it
+  names. Where a claim rests on reading a reader's source code and not on a
+  test, the documentation says so.

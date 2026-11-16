@@ -10,7 +10,7 @@ that its files are correct.
 | Unit tests | Encodings, level assignment, Thrift output, statistics, and codecs against known byte sequences and reference implementations. | `Parquetry.Tests` |
 | Generator tests | The code the source generator produces for a set of types, and the build errors it reports. | `Parquetry.Generators.Tests` |
 | Reader tests | Files written by the library are read by pyarrow, Polars, DuckDB, and Spark. Values and schema are compared with what was written. | `Parquetry.Interop.Tests` |
-| Same-output tests | Two paths that should give the same file do so, byte for byte: generated code and the runtime fallback, and the buffered and staged layouts. | `Parquetry.Tests` |
+| Same-output tests | Two paths that should give the same file do so, byte for byte: generated code and the runtime fallback, and the buffered and staged layouts. The layout comparison fixes the page size and uses a budget that never closes a row group early. | `Parquetry.Tests` |
 | Memory tests | A large write with a fixed budget stays under a measured ceiling. | `Parquetry.Tests` |
 | AOT test | An application published with Native AOT writes a file, and the build has no trimming warnings. | `Parquetry.Aot.Tests` |
 | Storage tests | The S3 and Azure destinations against emulators, and against live services when credentials are supplied. | `Parquetry.Cloud.Tests` |
@@ -26,8 +26,15 @@ Statistics, the page index, and bloom filters need a further check, because an
 error in them does not stop a file from loading. It makes a reader skip rows
 that match a query. For these features, tests run filtered queries in Spark and
 DuckDB and compare the rows returned with the rows expected. The test data
-includes the cases most likely to go wrong: NaN, positive and negative zero,
-empty strings, strings that differ in bytes above 127, and nulls.
+includes the cases most likely to go wrong: NaN, a page whose values are all
+NaN, positive and negative zero, empty strings, strings that differ in bytes
+above 127, and nulls.
+
+A correct result proves nothing if the reader never looked at the structure
+under test. Each of these tests therefore also shows that the reader used it,
+either from the reader's own metrics or by writing a deliberately wrong filter
+or index and confirming that rows go missing. Which readers use each structure
+by default has not been checked yet.
 
 ## Two tiers
 

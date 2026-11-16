@@ -7,7 +7,7 @@ nothing of their own.
 ## What this project is
 
 Parquetry is a C# library that writes .NET objects to Parquet files. It is
-distributed on NuGet under the MIT license. The priorities, in order, are
+MIT licensed and will be published on NuGet. The priorities, in order, are
 bounded memory use, speed, streaming output, and ease of use.
 
 Read these before changing anything:

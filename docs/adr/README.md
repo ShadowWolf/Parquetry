@@ -31,7 +31,7 @@ title or a link may follow. A bare number is not enough.
 | [0001](0001-name-and-license.md) | The library is named Parquetry and licensed under MIT. |
 | [0002](0002-target-frameworks.md) | Target .NET 8 and .NET 10. |
 | [0003](0003-write-only-scope.md) | The library writes Parquet and does not read it. |
-| [0004](0004-row-group-layout-strategies.md) | How rows become column chunks is a pluggable strategy, with in-memory buffering as the default. |
+| [0004](0004-row-group-layout-strategies.md) | Core chooses one of several strategies for laying out a row group, with in-memory buffering as the default. |
 | [0005](0005-destination-shapes.md) | Core defines two kinds of destination: sequential and staged. |
 | [0006](0006-source-generator-with-runtime-fallback.md) | A source generator maps objects to columns. A runtime fallback covers types unknown at build time. |
 | [0007](0007-type-registration.md) | Types are registered by an attribute on the type or by a context class. |
@@ -44,7 +44,7 @@ title or a link may follow. A bare number is not enough.
 | [0014](0014-write-api.md) | The write API has a high-level form and a low-level synchronous form. |
 | [0015](0015-async-only-core.md) | Core I/O is async only. Sync wrappers live in a separate package. |
 | [0016](0016-dependency-injection-package.md) | Dependency injection support is a separate package. |
-| [0017](0017-types-without-a-spark-readable-form.md) | Guid, TimeOnly, Half, and unsigned integers need an explicit representation. |
+| [0017](0017-types-that-need-an-explicit-representation.md) | Guid, TimeOnly, Half, and unsigned integers need an explicit representation. |
 | [0018](0018-decimal-mapping.md) | Decimals default to precision 38 and scale 18 and are never rounded silently. |
 | [0019](0019-datetime-mapping.md) | A DateTime of unspecified kind raises an error unless a policy is set. |
 | [0020](0020-spark-version-metadata-key.md) | The default profile writes the Spark version key so Spark 3.x reads old dates. |

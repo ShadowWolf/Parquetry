@@ -33,18 +33,27 @@ Core implements its own compressors and has no third-party dependencies.
   plug in an existing library.
 - A Zstd compressor written for this library is a later milestone.
 
+LZ4_RAW is included for users whose readers are all recent. It produces a
+compatibility message under the default profile, because Spark reads it only
+from version 3.5.
+
 ## Consequences
 
 - A Snappy or LZ4 compressor is a modest amount of code. A Zstd compressor
   with good compression ratios is much larger, which is why it comes later.
-- The compressors must be tested hard. Tests decompress their output with
-  reference implementations, used as test-only dependencies, over generated
-  and adversarial inputs.
+- Tests decompress the compressors' output with reference implementations,
+  used as test-only dependencies, over generated inputs and inputs built to
+  reach edge cases.
 - Benchmarks compare throughput with the existing managed libraries, so a
   regression is visible.
 - The codec interface compresses a whole page from one span into another, and
   each column gets its own compressor instance so working memory can be reused
   without locks.
-- The base class library has no gzip encoder that works on spans in one call,
-  as far as is known. The Gzip codec may therefore allocate a stream per page.
-  This will be measured when it is built.
+- On .NET 8 and .NET 10 the base class library has no gzip encoder that works
+  on spans in one call. The Gzip codec may therefore allocate a stream per
+  page. This will be measured when it is built.
+- .NET 11, released on 2026-11-10, adds `GZipEncoder` and `ZstandardEncoder`,
+  which compress from one span into another. This record was written without
+  taking them into account. Whether to use them, and whether a Zstd compressor
+  written for this library is still needed, is an open question, listed in
+  the [architecture overview](../architecture/README.md#open-questions).

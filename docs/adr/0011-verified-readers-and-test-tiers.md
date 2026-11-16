@@ -12,9 +12,9 @@ a paid account and credentials.
 
 ## Options considered
 
-For which readers: Apache Spark, Arrow-based readers (pyarrow, Polars, DuckDB),
-Trino and Athena, and cloud warehouses (Snowflake, BigQuery, Redshift
-Spectrum).
+For which readers: Apache Spark; pyarrow, Polars, and DuckDB, each of which
+has its own Parquet reader; Trino and Athena; and cloud warehouses (Snowflake,
+BigQuery, Redshift Spectrum).
 
 For tests that need accounts: run them automatically only when credentials are
 supplied, check by hand before each release, or leave them until after the
@@ -22,7 +22,7 @@ first release.
 
 ## Decision
 
-The verified readers are Apache Spark, Arrow-based readers, and cloud
+The verified readers are Apache Spark, pyarrow, Polars, DuckDB, and the cloud
 warehouses. Trino and Athena are not verified in the first release.
 
 Tests run in two tiers:

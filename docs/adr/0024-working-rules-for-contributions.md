@@ -32,6 +32,8 @@ Writing, in all text a person reads:
 - No phrasing typical of AI output, no cliches, no invented figures of speech.
 - Plain wording that is no longer or more technical than the reader needs.
 - No references to requirements or decisions by identifier alone.
+- Documentation and comments describe things as they are. Change history
+  belongs in commit messages and pull requests.
 
 Every pull request, before submission:
 

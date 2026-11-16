@@ -18,7 +18,7 @@ What other libraries do:
 
 | Library | Result |
 |---|---|
-| pyarrow 26.0.1 | Raises an error when a conversion to microseconds would lose data. Setting `allow_truncated_timestamps` drops the digits without an error. Checked by running it. |
+| pyarrow 26.0.1 | By default it writes nanoseconds, which loses nothing and which Spark cannot read. When it is asked to write microseconds, it raises an error if the conversion would lose data. Setting `allow_truncated_timestamps` drops the digits without an error. Checked by running it. |
 | ParquetSharp | Drops the digit without an error. Read from its source code. |
 | Parquet.Net 6.0.3 | Writes timestamps as INT96, which keeps every digit. This library does not write INT96. Checked by running it. |
 
@@ -40,7 +40,7 @@ For the direction when the digit is dropped:
 ## Decision
 
 Raise an error by default, and move toward 1970 when the digit is dropped.
-Both match pyarrow.
+Both match what pyarrow does when it writes microseconds.
 
 - A `DateTime` or `DateTimeOffset` with a non-zero 100-nanosecond digit raises
   an error that names the column and the option that allows truncation.
@@ -50,8 +50,12 @@ Both match pyarrow.
   value in 1970 or later moves earlier. A value before 1970 moves later.
 - A `TimeSpan` stored as a count of microseconds follows the same rule. Its
   value moves toward zero.
-- A column stored in nanoseconds, which the `Modern` profile allows, holds
-  every .NET value exactly, so the rule does not apply to it.
+- A `TimeOnly` stored in microseconds follows the same rule. Its value moves
+  toward midnight.
+- A column stored in nanoseconds, which the `Modern` profile allows, keeps
+  every digit of a .NET value, so this rule does not apply to it. Its range is
+  smaller, though: a 64-bit count of nanoseconds covers only the years 1677 to
+  2262. A value outside that range raises an error that names the column.
 
 ## Consequences
 
@@ -60,9 +64,10 @@ Both match pyarrow.
 - Most users will meet this error on their first write and will set the option
   once. The error message has to make that easy by naming the option.
 - The error leaves the file incomplete, and the writer aborts.
-- Users who know pyarrow get the behavior they expect, and a file written with
-  truncation allowed holds the same values pyarrow would have written from the
-  same input.
+- Users who have written microsecond timestamps with pyarrow get the behavior
+  they know, and a file written with truncation allowed holds the same values
+  pyarrow would have written from the same input. A pyarrow user who has only
+  used its default, nanoseconds, has not met this error before.
 - Moving toward 1970 has a known cost. A value before 1970 can move into the
   next second, and at a boundary into the next day or year. The change is
   always less than one microsecond. Moving to the earlier microsecond would

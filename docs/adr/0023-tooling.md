@@ -25,5 +25,5 @@ common to all three options.
   libraries, so most contributors know it.
 - Benchmarks compare Parquetry with `Parquet.Net` and `ParquetSharp`. Those
   libraries are referenced only by the benchmark project.
-- Continuous integration needs a GitHub repository. None is configured yet.
+- Continuous integration runs in the project's GitHub repository.
 - Reader tests start containers, so the CI runners must support Docker.

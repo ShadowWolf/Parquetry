@@ -9,10 +9,12 @@ exists yet. Nothing is published on NuGet.
 
 ## Goals
 
-- Keep memory use under a limit the caller sets, whatever the file size.
-- Write rows as fast as the hardware allows, with no allocation per row.
-- Produce files that Apache Spark, Databricks, Arrow-based tools, and cloud
-  warehouses read without reader settings.
+- Keep memory for row data under a limit the caller sets, whatever the file
+  size. Metadata that must be kept until the end of the file grows slowly
+  with it.
+- Write rows quickly, with no allocation per row.
+- Produce files that Apache Spark, Databricks, pyarrow, Polars, DuckDB, and
+  cloud warehouses read without reader settings.
 - Use Amazon S3 and Azure Blob Storage features directly through add-on
   packages.
 - Work with dependency injection and configuration, and also without them.
@@ -22,9 +24,9 @@ exists yet. Nothing is published on NuGet.
 | Package | Purpose |
 |---|---|
 | `Parquetry` | The writer, the source generator, and local destinations. No dependencies. |
-| `Parquetry.Azure` | Writes to Azure Blob Storage by staging blocks per column. |
+| `Parquetry.Azure` | Writes to Azure Blob Storage, uploading blocks while a row group is still open. |
 | `Parquetry.S3` | Writes to Amazon S3 with parallel multipart upload. |
-| `Parquetry.Extensions.DependencyInjection` | Service registration, configuration binding, named profiles. |
+| `Parquetry.Extensions.DependencyInjection` | Service registration, configuration binding, named options. |
 | `Parquetry.Sync` | Synchronous wrappers for callers that cannot use async code. |
 
 The library targets .NET 8 and .NET 10.

@@ -23,8 +23,8 @@ Spark and Delta support a precision of at most 38.
 
 ## Decision
 
-Option 1. The default is precision 38 and scale 18, which is also Spark's
-default. It can be changed in writer options and on individual properties. A
+Option 1. The default is precision 38 and scale 18, which is also what Spark
+uses when it infers a decimal type from a Java `BigDecimal`. It can be changed in writer options and on individual properties. A
 value that cannot be stored exactly in the column's precision and scale raises
 an error that names the column. The library does not round.
 
@@ -37,4 +37,7 @@ an error that names the column. The library does not round.
   their data fits in 18 digits can set a lower precision and get 8 bytes per
   value. A precision of 9 or less uses 4 bytes.
 - Checking each value costs a little time on every write.
-- An error while writing leaves the file incomplete, and the writer aborts.
+- An error while writing ends the write. The error is raised partway through
+  a row, the writer cannot continue, and the file is aborted. Whether the
+  writer should undo the partial row instead is an open question, listed in
+  the [architecture overview](../architecture/README.md#open-questions).

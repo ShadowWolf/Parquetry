@@ -3,6 +3,14 @@
 The schema of a file is derived from the .NET type being written. This page
 gives the mapping under the default profile and lists what is still undecided.
 
+Parquet stores values in a small set of physical types, such as INT32 and
+BYTE_ARRAY. A column can also carry a type annotation, which the format calls a
+logical type. It tells readers how to interpret the stored values, for example
+that an INT32 holds a date. The format has two generations of annotation: the
+current logical types and the older converted types. Where an older converted
+type exists for a column, the writer writes both, as the format requires, so
+that old readers understand the file.
+
 ## Simple types
 
 | .NET type | Stored as | Parquet type annotation |
@@ -56,8 +64,9 @@ The default is precision 38 and scale 18. It can be set per writer and per
 property. Storage depends on precision: up to 9 digits uses INT32, up to 18
 uses INT64, and more uses fixed-length bytes (16 bytes for precision 38). A
 value that cannot be stored exactly raises an error naming the column. The
-library does not round. Precision above 38 is rejected under the default
-profile because Spark and Delta do not support it.
+library does not round. The precision can be set from 1 to 38. Spark and
+Delta support no more than 38, and a .NET `decimal` never has more than 29
+digits.
 
 ### DateTime
 
@@ -67,6 +76,11 @@ profile because Spark and Delta do not support it.
 | `DateTime` with `Kind` of `Local` | Converted to UTC. |
 | `DateTime` with `Kind` of `Unspecified` | Error naming the column, unless a writer option says to treat it as UTC or as local. |
 | `DateTimeOffset` | Converted to UTC. The offset is not stored. |
+
+A column can also be set to store timestamps without a time zone. Under the
+default profile that setting produces a compatibility message, because Spark
+3.3 reads such a column as a point in time and a Delta table needs a feature
+enabled to hold it.
 
 Values are stored in microseconds. .NET keeps one more digit, in units of 100
 nanoseconds, and most real values have it: `DateTime.UtcNow` does, and so do
@@ -79,14 +93,21 @@ values from SQL Server's `datetime2` type.
 | The digit is not zero and truncation is allowed | The digit is dropped without an error. |
 
 Truncation is allowed by a writer option, which can also be set per column.
-pyarrow behaves the same way: it raises an error unless
-`allow_truncated_timestamps` is set.
+This matches what pyarrow does when it is asked to write microseconds: it
+raises an error unless `allow_truncated_timestamps` is set. pyarrow's own
+default is different. It writes nanoseconds, which loses nothing but which
+Spark cannot read.
 
 When the digit is dropped, the value moves toward 1970-01-01 00:00:00 UTC,
 which is also what pyarrow does. A value in 1970 or later moves earlier. A
 value before 1970 moves later, and can move into the next second:
 1969-12-31 23:59:59.9999999 becomes 1970-01-01 00:00:00. The change is always
 less than one microsecond.
+
+Under the `Modern` profile a column can be set to nanoseconds. Nanoseconds
+hold every digit of a .NET value, but a 64-bit count of them covers only the
+years 1677 to 2262. A value outside that range raises an error naming the
+column. `default(DateTime)`, which is in the year 1, is such a value.
 
 ### Enum
 
@@ -105,12 +126,14 @@ explicit choice, as those types do.
 ## Types that need an explicit choice
 
 A property of one of these types fails the build unless the user chooses how to
-store it. For each, either the natural Parquet type is one Spark cannot read,
-or Parquet has no matching type.
+store it. The reason differs by type. Spark cannot read the natural Parquet
+type for `Guid`, `TimeOnly`, and `Half`. Spark reads unsigned integers as a
+wider signed type, and Delta tables have no unsigned types. Parquet has no
+type for a length of time that the verified readers accept.
 
 | .NET type | Choices |
 |---|---|
-| `Guid` | Text (36 characters). 16 bytes with the UUID annotation. 16 bytes with no annotation. |
+| `Guid` | Text (36 characters). 16 fixed-length bytes with the UUID annotation. 16 fixed-length bytes with no annotation. |
 | `TimeOnly` | TIME in microseconds. A 64-bit count of microseconds since midnight with no annotation. Text. |
 | `Half` | FLOAT, which holds every `Half` value exactly. FLOAT16. |
 | `ushort`, `uint`, `ulong` | The next wider signed type (`ulong` becomes a 20-digit decimal). The unsigned annotation. |
@@ -124,9 +147,19 @@ microseconds follows the same rule as timestamps: a value with a non-zero
 100-nanosecond digit raises an error unless truncation is allowed, and a
 truncated value moves toward zero.
 
+`TimeOnly` also has a 100-nanosecond digit, so its two microsecond forms
+follow the same rule. A truncated value moves toward midnight.
+
+Both 16-byte forms of a `Guid` use the byte order that the UUID annotation
+requires, which is the order of the digits in the text form. That differs from
+what `Guid.ToByteArray()` returns by default, where the first three parts are
+reversed.
+
 The choice is checked against the profile when the writer is created. Under the
-default profile, choosing UUID, TIME, FLOAT16, or an unsigned annotation
-produces a validation message. The attribute names for making these choices
+default profile, choosing UUID, TIME, FLOAT16, an unsigned annotation, or 16
+bytes with no annotation produces a compatibility message. The last is on the
+list because Spark 3.3 cannot read fixed-length bytes without an annotation.
+The attribute names for making these choices
 will be settled when the feature is built.
 
 ## Types that are not supported
@@ -167,23 +200,34 @@ limit, so `decimal` works only when the values are known to fit, and the
 A list is written as:
 
 ```
-optional group lines (LIST) {
+<optional or required> group <property name> (LIST) {
   repeated group list {
-    optional <element type> element;
+    <optional or required> <element type> element;
   }
 }
 ```
 
-A class with no writable properties cannot be written, because Parquet does not
-allow an empty group. A type that contains itself is not supported. Both are
-reported at build time.
+The outer group is optional when the property is nullable, and the element is
+optional when the element type is nullable, by the rules in "Required and
+optional columns" above. A worked example is in
+[Shredding and the source generator](shredding-and-source-generator.md).
+
+This three-level form is the one the format specifies. Older writers produced
+shorter two-level forms, which readers do not all interpret the same way. The
+library never writes those.
+
+A class with no properties that can be written to the file is rejected. It
+would become an empty group, which the Java Parquet library and the readers
+built on it do not accept. A type that contains itself is not supported. Both
+are reported at build time.
 
 ## Column names
 
 A column takes the name of its property. An attribute or a naming policy can
-change it. Under the default profile, validation reports names that contain a
-space or any of `,;{}()=`, a tab, or a newline, and names that differ only by
-letter case.
+change it. Under the default profile, a compatibility message reports names
+that contain a space or any of `,;{}()=`, a tab, or a newline, and names that
+differ only by letter case. Spark reads the first kind, but a Delta table
+rejects them unless its column mapping feature is turned on.
 
 ## Not yet decided
 
@@ -191,3 +235,7 @@ letter case.
 |---|---|
 | How does a user leave a property out of the file? | Needed for properties of unsupported types. |
 | Can a user supply their own conversion for a type? | It would let the unsupported types be handled once per type and not once per property. |
+
+Smaller points, such as attribute names and which collection types are
+written, are in the full list of open questions in the
+[architecture overview](README.md#open-questions).

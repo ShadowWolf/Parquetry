@@ -47,6 +47,6 @@ Option 1.
   choose text.
 - The source generator writes the name lookup at build time, so writing names
   does not need reflection and works under Native AOT.
-- How a combination of `[Flags]` values is written as text, and what is
-  written for a number that has no name, will be settled when the feature is
-  built.
+- How a combination of `[Flags]` values is written as text, what is written
+  for a number that has no name, and whether the text column carries the
+  STRING or the ENUM annotation will be settled when the feature is built.

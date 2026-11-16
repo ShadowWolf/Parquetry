@@ -42,6 +42,6 @@ Option 2.
 - The library does not guess a time zone. A user whose data comes from a
   database will usually have to set the policy once.
 - Writing a timestamp without a time zone is possible as an explicit column
-  setting, with a validation message under the default profile.
+  setting, with a compatibility message under the default profile.
 - With truncation allowed, a value read back may differ from the original by
   less than a microsecond.

@@ -11,12 +11,30 @@ tested by this project yet. The reader tests described in
 [Testing](testing.md) will do that, and this page should be corrected when they
 disagree with it.
 
+The Spark versions read were 3.3, 3.4, 3.5, 4.0, 4.1, 4.2, and 4.3. "Every
+version checked" on this page means those. Where a table says a feature is
+readable from 3.3, that is the oldest version checked, and the feature may be
+older.
+
+## Terms used on this page
+
+| Term | Meaning |
+|---|---|
+| Delta Lake, Delta table | The table format Databricks uses. A Delta table is a set of Parquet files plus a log, and it has rules of its own about types and column names. |
+| Photon | Databricks' own query engine, which replaces parts of Spark on clusters where it is enabled. |
+| Vectorized reader | Spark's faster Parquet reader, which is on by default. Spark falls back to a slower reader for what it does not handle. |
+| Column mapping | A Delta table feature that lets column names contain characters Delta otherwise rejects. |
+| Auto Loader | A Databricks feature that loads new files as they arrive. It puts data that does not fit the table's schema into a "rescued data" column. |
+| `COPY INTO`, `read_files` | Databricks SQL commands that load files into a table or query them directly. |
+| Variant | A Databricks type for semi-structured data. |
+
 ## Summary
 
 The default profile's settings are readable by Spark 3.3 through 4.x according
-to Spark's source. No Databricks behavior was found that breaks them. Three
+to Spark's source. No Databricks behavior was found that breaks them. Some
 things about Databricks could not be confirmed from documentation and need a
-live test:
+live test. The main ones are these, and the full list is at the end of the
+page:
 
 - Which encodings and codecs the Photon engine reads.
 - Whether Databricks handles old dates the same way as open-source Spark.
@@ -35,6 +53,8 @@ From Databricks release notes:
 | 17.3 LTS | 4.0.0 |
 | 18 LTS | 4.1.0 |
 
+The release notes also list runtime 19, on Spark 4.3.0.
+
 Photon passes anything it does not support to Spark. Its documentation lists
 supported data types but says nothing about Parquet encodings or codecs.
 
@@ -51,7 +71,7 @@ supported data types but says nothing about Parquet encodings or codecs.
 | DATE | Read. | Read. | Confirmed |
 | Timestamp, milliseconds or microseconds, adjusted to UTC | Read in all versions. | Same. | Confirmed |
 | Timestamp, not adjusted to UTC | 3.3 reads it as a point in time, which is wrong. 3.4 and later read it as a timestamp without time zone. | Supported from runtime 13.3. A Delta table needs the `timestampNtz` feature enabled. | Confirmed |
-| Timestamp, nanoseconds | Error through 4.1, unless a legacy setting is enabled. | A Databricks knowledge base article reports the same failure. | Confirmed |
+| Timestamp, nanoseconds | Error through 4.1, unless the setting `spark.sql.legacy.parquet.nanosAsLong` is enabled. | A Databricks knowledge base article reports the same failure. | Confirmed |
 | INT96 timestamp | Read. An older form that new writers should not produce. | Not documented. | Spark confirmed |
 | TIME | Error in 3.x and 4.0. In 4.1, one form is read, and only when a setting that is off by default is enabled. | A TIME type exists in beta from runtime 18. Reading it from Parquet is not documented. | Spark confirmed. Databricks not confirmed. |
 | UUID | Error in every version checked. | Not documented. | Spark confirmed |
@@ -63,8 +83,9 @@ supported data types but says nothing about Parquet encodings or codecs.
 
 Spark 3.x fails to read these from a file whose writer it does not recognize.
 It recognizes a writer by the key `org.apache.spark.version` in the file's
-metadata. With that key set to 3.0.0 or later, and without the related legacy
-keys, Spark reads the values as written. Spark 4.0 reads them as written in
+metadata. With that key set to 3.0.0 or later, and without the keys Spark adds
+to mark a file written with the old calendar, Spark reads the values as
+written. Spark 4.0 reads them as written in
 either case. Confirmed in `DataSourceUtils.scala`. The Databricks default is
 not documented.
 
@@ -75,13 +96,13 @@ not documented.
 | List in the standard three-level layout | Read. | Confirmed |
 | Map as a repeated group of key and value with a required key | Read. | Confirmed |
 | Empty group | The Java Parquet library rejects it. Databricks documentation states that Parquet forbids empty structs. | Confirmed |
-| Fast reader for nested columns | Off by default in 3.3, where a slower reader is used. On by default from 3.4. | Confirmed |
+| Vectorized reader for nested columns | Off by default in 3.3, where a slower reader is used. On by default from 3.4. | Confirmed |
 
 No limit on nesting depth was found.
 
 ## Encodings and page versions
 
-These apply to Spark's vectorized reader, which is on by default.
+These apply to Spark's vectorized reader.
 
 | Feature | Readable from Spark | Status |
 |---|---|---|

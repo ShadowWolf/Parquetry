@@ -7,7 +7,7 @@ Date: 2026-11-14
 
 A user who sets no options should get a file that works wherever they send it.
 The readers the project verifies against are Apache Spark (including
-Databricks), Arrow-based tools, and cloud warehouses. Spark is the strictest of
+Databricks), pyarrow, Polars, DuckDB, and cloud warehouses. Spark is the strictest of
 these, and Databricks adds limits of its own through Delta Lake.
 
 Research on 2026-11-14 checked Spark's source code for versions 3.3 through
@@ -33,10 +33,21 @@ Option 1. The default profile, `Compatible`, writes:
 - Lists in the standard three-level layout.
 - Statistics in the current `min_value` and `max_value` fields.
 
-It does not write INT96 timestamps, nanosecond timestamps, TIME, UUID,
-half-precision floats, unsigned integer annotations, or fixed-length byte
-columns without a type annotation. Spark fails on each of these in at least one
-supported version.
+Data page version 1 with PLAIN and dictionary encodings is what Spark and
+pyarrow write by default, so it is the combination every reader has been used
+with most.
+
+Where the format has both a current logical type and an older converted type
+for a column, the profile writes both, as the format requires.
+
+It does not write the following:
+
+| Not written | Reason |
+|---|---|
+| Nanosecond timestamps, TIME, UUID, half-precision floats | Spark fails to read each of these in at least one version in scope. |
+| Fixed-length byte columns without a type annotation | Spark 3.3 fails to read them. |
+| Unsigned integer annotations | Spark reads them as a wider signed type, and Delta tables have no unsigned types. |
+| INT96 timestamps | Spark reads them, but the format has deprecated them. |
 
 If testing shows that Databricks differs from open-source Spark, a `Databricks`
 profile will be added.
@@ -47,9 +58,15 @@ profile will be added.
   could not find documentation on which encodings and codecs the Photon engine
   reads. A live test against Databricks, with Photon on and off, is needed to
   confirm this.
+- The research covers Spark and Databricks. That pyarrow, Polars, DuckDB, and
+  the cloud warehouses read these defaults is expected, and is confirmed only
+  when the reader tests run.
+- Spark's source shows it can read data page version 2 and two of the delta
+  encodings from version 3.3. They stay out of this profile until Photon and
+  the warehouses have been tested with them.
 - Files are larger and slower to read than they would be with newer encodings.
   Users who control their readers can choose `Modern`.
-- LZ4_RAW and Brotli are available but produce a validation message under this
+- LZ4_RAW and Brotli are available but produce a compatibility message under this
   profile. Spark reads LZ4_RAW only from version 3.5 and does not include a
   Brotli codec.
 - Column names containing a space or any of `,;{}()=`, a tab, or a newline

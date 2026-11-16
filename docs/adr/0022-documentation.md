@@ -24,6 +24,9 @@ Option 1.
 - `docs/adr` holds one record per decision, in the format described in its
   README.
 - `docs/architecture` holds an overview and one page per subsystem.
+- `docs/research` holds the small programs used to check how other libraries
+  behave, so that a statement such as "checked by running it" can be checked
+  again.
 - Every public type and member has an XML doc comment. The build treats a
   missing comment as an error.
 

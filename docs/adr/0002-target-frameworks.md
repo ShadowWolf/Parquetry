@@ -32,3 +32,7 @@ Target `net8.0` and `net10.0`.
 - The source generator project itself targets `netstandard2.0`, because the
   C# compiler requires that of generators. This does not affect what consumers
   need.
+- .NET 8 reached the end of Microsoft's support on 2026-11-10, and .NET 11 was
+  released the same day. This record was written without taking either into
+  account. Whether the targets should change is an open question, listed in
+  the [architecture overview](../architecture/README.md#open-questions).

@@ -25,11 +25,14 @@ Option 1. `Parquetry.Extensions.DependencyInjection` provides:
 - Named options, so an application can have several configurations, for
   example one per profile.
 - A writer factory that resolves options and destinations from the container.
-- Validation at application start, so a bad configuration fails early.
+- Validation at application start of the settings that do not depend on a row
+  type, so a bad configuration fails early. Checks that need the row type run
+  when a writer is created.
 
 ## Consequences
 
-- Core is usable with a constructor and an options object.
+- Core is usable without a container. `ParquetWriter.Create` takes a
+  destination and an options object.
 - The options type is a plain class with settable, nullable properties, where
   null means "use the profile's value". That shape binds from configuration
   without core referencing any configuration package.
