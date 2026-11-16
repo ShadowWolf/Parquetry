@@ -28,8 +28,10 @@ Option 2.
 
 - A share of the budget is set aside for page index and footer records.
 - Everything else is charged to the rest of the budget: values, dictionaries,
-  held pages, working space, the bloom filters of the open row group, and data
-  on its way to the destination. This is called the row data part.
+  held pages, working space, the bloom filters of the open row group, and
+  pages the writer has handed to a destination that has not yet accepted
+  them. This is called the row data part. Memory that a destination holds
+  itself, such as S3 part buffers, is a separate open question.
 - The writer's `NeedsFlush` property becomes true when the row data part is
   full, not when the whole budget is.
 - The size of the share is a setting. Its default will be chosen from

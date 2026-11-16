@@ -46,11 +46,11 @@ type. The list is on the parity page.
 - [pyarrow parity](../architecture/pyarrow-parity.md) lists every comparison
   made so far: where the library matches, where it differs on purpose and
   why, and where a difference is still to be decided.
-- The first comparison, on 2026-11-16 against pyarrow 26.0.1, found that every
-  form the documents say the library will write is one pyarrow itself writes,
-  by default or with an option, and reads back. No Parquetry file exists yet,
-  so this is not the same as pyarrow having read one. The reader tests will
-  confirm it.
+- The first comparison, on 2026-11-16 against pyarrow 26.0.1, found that under
+  the default profile each way the library stores a type or lays out nested
+  data is one pyarrow itself writes, by default or with an option, and reads
+  back. No Parquetry file exists yet, so this is not the same as pyarrow
+  having read one. The reader tests will confirm it.
 - That comparison also found differences that had no decision behind them. The
   parity page lists the ones that are still open.
 - pyarrow's defaults change between its versions. The parity page records the

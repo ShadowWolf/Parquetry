@@ -80,6 +80,9 @@ position and size of each column chunk, and key-value metadata.
   timestamps before 1900. An option turns this off. The exact value will be
   fixed when the feature is built.
 - Users can add their own key-value metadata.
+- pyarrow also writes Arrow's own schema into the key-value metadata, under
+  the key `ARROW:schema`. The library does not. Whether it should is an open
+  question on the [pyarrow parity](pyarrow-parity.md) page.
 
 ## Page index
 

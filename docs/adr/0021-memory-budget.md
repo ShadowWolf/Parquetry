@@ -30,10 +30,12 @@ Option 1.
 - All pooled buffers are rented through one component that charges the budget
   for the rented size.
 - `Write` never blocks or throws because of the budget. When usage reaches the
-  budget, `NeedsFlush` becomes true. A later decision reserves a share of the
-  budget for footer data, and `NeedsFlush` is worked out against the rest.
+  limit for row data, `NeedsFlush` becomes true. That limit is the budget less
+  a share reserved for footer data, under a later decision.
 - If the caller flushes when `NeedsFlush` is true, the most the writer can go
-  over is one row plus one page per column.
+  over that limit is one row plus one page per column. This does not cover the
+  reserved share or memory held by a destination, which have open questions
+  of their own.
 - When a writer is created, the library computes the smallest budget that can
   work for the number of columns and fails if the configured budget is lower.
   The error states the computed minimum.

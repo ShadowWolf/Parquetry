@@ -138,7 +138,8 @@ is separate and optional for that reason.
 Core reports through `System.Diagnostics`, which needs no extra packages:
 
 - Metrics: rows written, bytes written, row group sizes, memory in use against
-  the budget, time spent in flushes.
+  the budget, how much of the share reserved for footer data is in use, and
+  time spent in flushes.
 - Activities: one per file and one per flush, for tracing.
 
 Applications collect these with OpenTelemetry or any other listener.

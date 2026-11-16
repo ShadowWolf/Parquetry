@@ -109,9 +109,9 @@ While a row group is open, each column has a pending segment that collects the
 column's finished pages. The layout has a target segment size. It works the
 target out from the destination's limits, and its starting value will be set
 from benchmarks. During `FlushAsync`, the layout stages every pending segment
-that has reached the target size. If memory use is still at the budget after
-that, it also stages the largest of the remaining pending segments, below the
-target size, until usage is under the budget. A segment staged during a flush
+that has reached the target size. If memory use is still at the limit for row
+data after that, it also stages the largest of the remaining pending
+segments, below the target size, until usage is under that limit. A segment staged during a flush
 holds pages of one column only.
 
 When the row group closes, each column has two things left in memory: its
@@ -154,7 +154,8 @@ Given the same rows, the same options, and the same row group boundaries, both
 layouts produce the same bytes. Tests compare them byte for byte.
 
 In normal use the row group boundaries can differ. The buffered layout closes
-a row group when the memory budget is reached, and the staged layout does not.
+a row group when the memory limit for row data is reached, and the staged
+layout does not.
 The writer also lowers its page size when the budget is tight. The comparison
 tests therefore fix the page size and use a budget large enough that it never
 closes a row group early. Encrypted files are left out of the byte comparison

@@ -45,5 +45,6 @@ above and to any value error added later.
   the low-level `Write` method, the row at fault is the one the caller just
   passed. Whether the error also reports the row's position, for callers who
   pass a whole sequence, is a detail to settle when the API is built.
-- A limit reached during a write ends it in the same way. The row group limit
-  of an encrypted file is one such limit.
+- A limit that raises an error during a write ends it in the same way. The row
+  group limit of an encrypted file is one. What happens at the two memory
+  limits that are still open questions is decided separately.

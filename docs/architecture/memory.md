@@ -11,7 +11,7 @@ memory is counted and limited, and what the limit does not cover.
 | Dictionaries | The distinct values of each dictionary-encoded column in the open row group. |
 | Held pages | Encoded, compressed pages waiting to be written or staged. |
 | Working space | Scratch memory for encoding and compression. |
-| In flight | Data handed to a destination and not yet accepted, such as S3 parts being uploaded. |
+| In flight | Pages the writer has handed to a destination that has not yet accepted them. Memory a destination holds itself, such as S3 part buffers, is covered separately below. |
 | Metadata | Row group and page records kept for the footer and page index, and the bloom filters of the open row group. |
 
 ## The budget
@@ -30,7 +30,7 @@ The budget is a soft limit:
 - When usage reaches the limit of the row data part, the writer's `NeedsFlush`
   property becomes true. The caller is expected to call `FlushAsync` before
   the next `Write`.
-- If the caller does that, the most the writer can exceed the budget by is one
+- If the caller does that, the most the row data part can be exceeded by is one
   row plus one page per column. A caller who does not flush has no limit.
 
 When a writer is created, the library works out the smallest budget that could
@@ -80,7 +80,8 @@ Three things grow with the size of the file and work against the budget:
 ### The reserved share
 
 A share of the budget is set aside for page index and footer records.
-Everything else in the table at the top of this page is charged to the rest,
+Everything else the writer holds, as listed in the table at the top of this
+page, is charged to the rest,
 the row data part, and `NeedsFlush` is worked out against that part only.
 While the share has room, growth in footer records does not cause extra
 flushes or smaller row groups. The cost is that the row data part is smaller

@@ -103,9 +103,10 @@ values from SQL Server's `datetime2` type.
 
 Truncation is allowed by a writer option, which can also be set per column.
 This matches what pyarrow does when it is asked to write microseconds: it
-raises an error unless `allow_truncated_timestamps` is set. pyarrow's own
-default is different. It writes nanoseconds, which loses nothing but which
-Spark, in the versions checked, cannot read.
+raises an error unless `allow_truncated_timestamps` is set. By default pyarrow
+does not convert at all. It writes the unit the data has, so data in
+nanoseconds stays in nanoseconds. That loses nothing, but Spark, in the
+versions checked, cannot read it.
 
 When the digit is dropped, the value moves toward 1970-01-01 00:00:00 UTC,
 which is also what pyarrow does. A value in 1970 or later moves earlier. A

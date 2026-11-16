@@ -18,7 +18,7 @@ What other libraries do:
 
 | Library | Result |
 |---|---|
-| pyarrow 26.0.1 | By default it writes nanoseconds, which loses nothing and which Spark cannot read. When it is asked to write microseconds, it raises an error if the conversion would lose data. Setting `allow_truncated_timestamps` drops the digits without an error. Checked by running it. |
+| pyarrow 26.0.1 | By default it writes the unit the data has, so data in nanoseconds stays in nanoseconds. That loses nothing, but Spark cannot read it. When it is asked to write microseconds, it raises an error if the conversion would lose data. Setting `allow_truncated_timestamps` drops the digits without an error. Checked by running it. |
 | ParquetSharp | Drops the digit without an error. Read from its source code. |
 | Parquet.Net 6.0.3 | Writes timestamps as INT96, which keeps every digit. This library does not write INT96. Checked by running it. |
 
@@ -68,8 +68,8 @@ Both match what pyarrow does when it writes microseconds.
   [a value that cannot be written ends the write](0033-value-error-ends-the-write.md).
 - Users who have written microsecond timestamps with pyarrow get the behavior
   they know, and a file written with truncation allowed holds the same values
-  pyarrow would have written from the same input. A pyarrow user who has only
-  used its default, nanoseconds, has not met this error before.
+  pyarrow would have written from the same input. A pyarrow user who has
+  never asked it to convert units has not met this error before.
 - Moving toward 1970 has a known cost. A value before 1970 can move into the
   next second, and at a boundary into the next day or year. The change is
   always less than one microsecond. Moving to the earlier microsecond would
