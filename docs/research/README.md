@@ -10,8 +10,9 @@ solution, and are not held to its coding rules.
 `parquet-net-probe` writes one row for each of a set of .NET types with
 Parquet.Net and prints the schema Parquet.Net wrote, the value read back, or
 the error. It was run on 2026-11-14 with Parquet.Net 6.0.3 on .NET 10. Its
-`byte` case is also quoted on the
-[pyarrow parity](../architecture/pyarrow-parity.md) page.
+`byte` case is quoted in the decision record on
+[the byte annotation](../adr/0035-byte-annotation.md), and its enum case on
+the [pyarrow parity](../architecture/pyarrow-parity.md) page.
 
 ```
 dotnet run --project docs/research/parquet-net-probe

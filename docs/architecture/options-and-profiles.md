@@ -7,7 +7,7 @@ readers can read the output.
 
 | Setting | `Compatible` (default) | `Modern` |
 |---|---|---|
-| Intended readers | Spark 3.5 and later, Databricks, pyarrow, Polars, DuckDB, and cloud warehouses. Spark 3.3 and 3.4 are expected to work, from reading Spark's source, but are not tested. | Current versions of pyarrow, Polars, and DuckDB, and other readers that support the newer format features |
+| Intended readers | Spark 3.5 and later, Databricks, pyarrow, Polars, DuckDB, and cloud warehouses. Spark 3.3 and 3.4 are expected to work, from reading Spark's source. They are not in the tests that run on every pull request. One test, of decimals and byte columns, has been run on them. | Current versions of pyarrow, Polars, and DuckDB, and other readers that support the newer format features |
 | Data page version | 1 | 2 |
 | Encodings | PLAIN, dictionary | Adds the delta encodings and BYTE_STREAM_SPLIT |
 | Default codec | Snappy | To be decided |

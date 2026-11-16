@@ -12,8 +12,8 @@ the stored values, for example that an INT32 holds an unsigned 8-bit number.
 Most unsigned types make the user choose how they are stored, under the
 decision on
 [types that need an explicit representation](0017-types-that-need-an-explicit-representation.md).
-`byte` was exempted there because it is so common, so it needs a default. That
-record chose INT32 annotated as a signed 16-bit integer.
+`byte` was exempted there because it is so common, so it needs a default. The
+default first chosen for it was INT32 annotated as a signed 16-bit integer.
 
 The comparison with pyarrow, which is this library's
 [reference for what is written](0031-pyarrow-as-reference.md), showed that
@@ -69,8 +69,11 @@ confirm, in the
   Those types still need an explicit choice. One of their choices is the
   unsigned annotation, which has the same filter cost in Spark.
 - A `byte` column produces no compatibility message, the notice the writer
-  gives for a setting that a reader of the profile cannot handle. Spark reads
-  the column.
+  gives for a setting that a reader of the profile handles badly. Choosing the
+  unsigned annotation for a wider type does produce one, although Spark
+  treats both the same way. The difference is that `byte` is a default the
+  user did not choose, and a message on every `byte` column would be shown to
+  nearly every user.
 - When Spark writes such a column into a Delta table, it becomes `smallint`.
   Delta has no unsigned types.
 - Databricks has not been tested. The tests against a live Databricks

@@ -19,7 +19,7 @@ for the timestamp program. Each row below comes from one of these sources:
 |---|---|
 | `docs/research/pyarrow-parity/probe.py` | Every row not listed in the entries below. Its output is saved beside it as `output.txt`, so a row can be checked without running anything. |
 | `docs/research/pyarrow-timestamp-probe.py` | The two rows about timestamps that lose digits. |
-| `docs/research/parquet-net-probe` | The two statements about what Parquet.Net writes. |
+| `docs/research/parquet-net-probe` | The statement about what Parquet.Net writes for an enum. |
 | `docs/research/pyarrow-parity/decimal_size.py` | The statistics pyarrow writes for a fixed-length decimal. Its output is saved beside it. |
 | [Spark and Databricks compatibility](spark-and-databricks-compatibility.md) | Every statement about Spark or Delta. Those come from reading Spark's source. Only the reading of decimals and of unsigned 8-bit columns has been tested by this project. |
 

@@ -170,7 +170,7 @@ widths, and with decimals of 18 digits or fewer as INT32 and INT64.
 
 | Case | Result on all five versions |
 |---|---|
-| A decimal column at every precision from 1 to 38: 6,000 rows in 4 row groups, with nulls, negative values, and values at the edge of each byte width. Written with dictionary pages, with plain pages, and with a dictionary that overflows into plain pages. | Every value equal, in both forms. |
+| A decimal column at every precision from 1 to 38: 6,000 rows in 4 row groups, with nulls, negative values, and values at the edge of each byte width. Written with dictionary pages, with plain pages, and with pyarrow's limit on the size of a dictionary page set to 1 KB. | Every value equal, in both forms. |
 | Eight decimal columns that do not allow nulls. | Every value equal. |
 | Decimals inside lists, structs, and maps. | Every value equal. |
 | Filters on sorted decimal columns across 12 row groups. | Every count right. Spark skipped row groups in both forms. |

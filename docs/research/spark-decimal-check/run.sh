@@ -21,9 +21,13 @@ for tag in \
 do
     version=${tag%%-*}
     echo "Spark $version"
-    docker run --rm -v "$work":/work:ro "apache/spark:$tag" \
+    if ! docker run --rm -v "$work":/work:ro "apache/spark:$tag" \
         /opt/spark/bin/spark-submit --master "local[2]" /work/check.py /work \
-        2>/dev/null | grep '^RESULT' > "$here/results/spark-$version.txt" || status=1
+        > "$work/output-$version.txt" 2>/dev/null
+    then
+        status=1
+    fi
+    grep '^RESULT' "$work/output-$version.txt" > "$here/results/spark-$version.txt" || status=1
     tail -1 "$here/results/spark-$version.txt"
 done
 exit $status
