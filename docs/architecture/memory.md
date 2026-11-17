@@ -149,9 +149,10 @@ meant to come from the same budget, so that turning it on leaves less room for
 buffered pages and does not raise the writer's total. It depends on the open
 question above about memory held by a destination.
 
-Encoding columns in parallel is planned for a late milestone and is not
-designed. `Write` is synchronous and a writer is used from one thread, so the
-design has to say where the parallel work runs. This is an open question.
+Encoding columns in parallel is planned for the "Performance and live tests"
+milestone and is not designed. `Write` is synchronous and a writer is used
+from one thread, so the design has to say where the parallel work runs. This
+is an open question.
 
 ## Defaults
 

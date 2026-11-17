@@ -80,7 +80,8 @@ methods are described in [Public API](public-api.md).
 
 ```
 AGENTS.md  CLAUDE.md  LICENSE  README.md
-.github/                           pull request template, workflows
+.github/                           pull request and issue templates, workflows
+.claude/skills/                    rules from AGENTS.md repeated for Claude Code
 docs/adr/                          decision records
 docs/architecture/                 these pages
 docs/research/                     programs used to check how other libraries behave

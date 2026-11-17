@@ -31,7 +31,7 @@ Core implements its own compressors and has no third-party dependencies.
   the base class library.
 - The codec interface is public. A user who needs Zstd before core has it can
   plug in an existing library.
-- A Zstd compressor written for this library is a later milestone.
+- A Zstd compressor written for this library comes after the first release.
 
 LZ4_RAW is included for users whose readers are all recent. It produces a
 compatibility message under the default profile, because Spark reads it only

@@ -102,7 +102,8 @@ Option 2, under the default profile.
   18-digit numbers, the fixed-length form was 5.2 MB and the integer form
   4.3 MB.
   The measurements are in
-  `docs/research/pyarrow-parity/decimal_size_output.txt`.
+  `docs/research/pyarrow-parity/decimal_size_output.txt`, which calls the
+  fixed-length form the "bytes form".
 - Minimum and maximum statistics for a fixed-length decimal are compared as
   signed numbers, not as unsigned bytes. With unsigned comparison a negative
   value would sort above a positive one, and readers would skip rows they

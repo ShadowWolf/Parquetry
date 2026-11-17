@@ -10,13 +10,12 @@
 
 ### Expected behavior
 
-<!-- What the library, the build, or a contributor does once this is merged,
-     and anything that deliberately stays the same. -->
+<!-- What the library, the build, or a contributor does once this is merged. -->
 
 ## Issue
 
-<!-- A link to the issue that goes with this pull request. Every pull request
-     after the Documentation milestone needs one. -->
+<!-- A link to the issue that goes with this pull request. Write "None" only
+     for a pull request that is part of the Documentation milestone. -->
 
 ## How it was tested
 
