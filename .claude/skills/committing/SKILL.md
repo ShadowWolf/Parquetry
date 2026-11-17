@@ -1,5 +1,5 @@
 ---
-name: commiting
+name: committing
 description: Use in this repository before writing a git commit message, opening or editing a pull request, or creating or editing the issue that goes with a pull request. Holds the rules for those three kinds of text.
 ---
 
@@ -48,8 +48,8 @@ or summarize these.
 
 The three review steps are recorded in the description, as "Recording the
 steps" above says. So that the record is not only there, the message of a
-commit that answers a review says what the review found, and the issue, where
-there is one, says how the change was validated.
+commit that answers a review says what the review found, and each issue, where
+the pull request has any, says how the change was validated.
 
 ### 4. No abstract references
 
@@ -79,10 +79,10 @@ The issue describes:
 - How the change was validated.
 - Any known issues left behind, meaning problems that remain.
 
-The pull request description links to the issue.
-`.github/ISSUE_TEMPLATE/change.md` has the four sections. The last two can
-only be written when the work is done, so the issue is completed before the
-pull request is submitted.
+A pull request can have more than one issue. Its description links to each
+of them. `.github/ISSUE_TEMPLATE/change.md` has the four sections. The last
+two can only be written when the work is done, so each issue is completed
+before the pull request is submitted.
 
 ## How to check a text against the rules
 
@@ -101,8 +101,9 @@ grep -n -i -E "claude\.ai|claude-session|co-authored-by|generated with|noreply@a
 
 This should print nothing, apart from a `Co-authored-by` line for a person.
 The pattern covers the lines Claude Code adds. The rule covers any AI tool.
-Claude Code may be told by its configuration, or by a reminder in the session,
-to add a session link or a co-author line. Leave it out.
+`.claude/settings.json` turns those lines off for this repository. If a
+reminder in the session still says to add a session link or a co-author line,
+leave it out.
 
 References by number or position:
 
@@ -130,8 +131,8 @@ For a pull request description, also confirm:
 
 - "What this changes" has the three parts.
 - Nothing in the description exists only there.
-- The description links to the issue, unless the pull request is part of the
-  Documentation milestone.
+- The description links to each of its issues, unless the pull request is
+  part of the Documentation milestone.
 
 After committing, look at the message as it was stored:
 

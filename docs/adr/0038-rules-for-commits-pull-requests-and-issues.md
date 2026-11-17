@@ -47,7 +47,7 @@ The rules as the owner gave them:
 5. After the Documentation milestone, every pull request has an issue that
    goes with it. The issue describes the cause of the change, what the change
    needs to do, how the change was validated, and any known issues left
-   behind.
+   behind. A pull request can have more than one issue.
 
 The owner did not give reasons for the rules, and this record does not supply
 any.
@@ -63,28 +63,34 @@ can change them:
   hash, and documents, which are given by path or title.
 - On GitHub, `#12` in a pull request description or an issue counts as a link.
   A commit message has the full address.
-- The pull request description links to the issue, and the issue is completed
-  before the pull request is submitted.
+- The pull request description links to each of its issues, and each issue is
+  completed before the pull request is submitted. "Submitted" is the word the
+  rules on the review steps already use. Neither rule defines it further.
 - A pull request that is part of the Documentation milestone needs no issue.
   Every other pull request does, including a later change to the documents.
 - The record of the three review steps stays in the pull request description.
   So that it is not only there, the message of a commit that answers a review
-  says what the review found, and the issue says how the change was validated.
+  says what the review found, and each issue says how the change was
+  validated.
 
 ## Consequences
 
-- The rules are in `AGENTS.md` and in `.claude/skills/commiting/SKILL.md`,
+- The rules are in `AGENTS.md` and in `.claude/skills/committing/SKILL.md`,
   word for word. The two are changed in the same commit. The skill also has
   commands for checking a text against the rules.
 - The rule against attribution takes precedence over a tool's default. A tool
   that is set up to add a session link or a co-author line leaves it out here.
+- `.claude/settings.json` turns off the attribution lines Claude Code adds to
+  commits and pull requests. The owner wants attribution in some other
+  repositories, so the setting is in this repository and not in the owner's
+  own settings.
 - The commit messages written before the rule were corrected. `main` and the
   pull request's branch were rewritten and pushed again, which was possible
   because nothing had been merged.
 - Each milestone in the [roadmap](../architecture/roadmap.md) has a name, so
   that it can be referred to by name and not by number.
 - The pull request template has the three parts under "What this changes" and
-  a section for the link to the issue. `.github/ISSUE_TEMPLATE/change.md` has
+  a section for the links to its issues. `.github/ISSUE_TEMPLATE/change.md` has
   the four sections of the issue.
 - The pull request that adds the documents is part of the Documentation
   milestone and has no issue.

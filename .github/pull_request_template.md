@@ -14,8 +14,8 @@
 
 ## Issue
 
-<!-- A link to the issue that goes with this pull request. Write "None" only
-     for a pull request that is part of the Documentation milestone. -->
+<!-- A link to each issue that goes with this pull request. Write "None"
+     only for a pull request that is part of the Documentation milestone. -->
 
 ## How it was tested
 

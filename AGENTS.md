@@ -4,8 +4,10 @@ These rules apply to every contributor, human or AI, and to every AI tool used
 here. Tool-specific files point to this file or repeat its rules, and add
 none of their own. `CLAUDE.md` points to it. A skill is a file of instructions
 that Claude Code loads for one kind of task. The skill in
-`.claude/skills/commiting` repeats the rules for commits, pull requests, and
+`.claude/skills/committing` repeats the rules for commits, pull requests, and
 issues, and adds only the commands for checking a text against them.
+`.claude/settings.json` turns off the attribution lines that Claude Code
+would otherwise add to commits and pull requests in this repository.
 
 ## What this project is
 
@@ -78,7 +80,7 @@ The pull request must then say which steps were skipped.
 ## Commit messages, pull request descriptions, and issues
 
 These rules are in addition to the writing rules above. The skill in
-`.claude/skills/commiting` repeats this section word for word. Change both in
+`.claude/skills/committing` repeats this section word for word. Change both in
 the same commit.
 
 ### 1. No tool attribution
@@ -117,8 +119,8 @@ or summarize these.
 
 The three review steps are recorded in the description, as "Recording the
 steps" above says. So that the record is not only there, the message of a
-commit that answers a review says what the review found, and the issue, where
-there is one, says how the change was validated.
+commit that answers a review says what the review found, and each issue, where
+the pull request has any, says how the change was validated.
 
 ### 4. No abstract references
 
@@ -148,10 +150,10 @@ The issue describes:
 - How the change was validated.
 - Any known issues left behind, meaning problems that remain.
 
-The pull request description links to the issue.
-`.github/ISSUE_TEMPLATE/change.md` has the four sections. The last two can
-only be written when the work is done, so the issue is completed before the
-pull request is submitted.
+A pull request can have more than one issue. Its description links to each
+of them. `.github/ISSUE_TEMPLATE/change.md` has the four sections. The last
+two can only be written when the work is done, so each issue is completed
+before the pull request is submitted.
 
 ## Technical rules
 
