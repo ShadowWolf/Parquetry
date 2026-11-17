@@ -1,8 +1,10 @@
 # Working rules for this repository
 
 These rules apply to every contributor, human or AI, and to every AI tool used
-here. Tool-specific files such as `CLAUDE.md` point to this file and add
-nothing of their own.
+here. Tool-specific files point to this file or repeat its rules, and add
+none of their own. `CLAUDE.md` points to it. The skill in
+`.claude/skills/commiting` repeats the rules for commits, pull requests, and
+issues so that Claude Code applies them when it writes one.
 
 ## What this project is
 
@@ -71,6 +73,70 @@ test was shown to fail.
 The person requesting the work can waive these steps by stating that the change
 is a hotfix or an urgent release. An AI agent must not decide this on its own.
 The pull request must then say which steps were skipped.
+
+## Commit messages, pull request descriptions, and issues
+
+These rules are in addition to the writing rules above.
+
+### No tool attribution
+
+A commit message, a pull request description, and an issue carry no trace of
+the tool that helped write them:
+
+- No link to an AI session, such as a `claude.ai` address.
+- No "generated with" footer.
+- No `Co-authored-by` line or other trailer that names an AI tool.
+
+Some tools add these lines by default. Remove them before committing or
+posting. This rule takes precedence over the tool's default.
+
+### What a pull request description says
+
+The section "What this changes" has three parts:
+
+- Cause: what made the change necessary. A fault, a missing feature, a
+  decision that was made.
+- Change: what was changed, in terms a reader of the code or documents would
+  recognize.
+- Expected behavior: what the library, the build, or a contributor does once
+  the change is merged, and anything that deliberately stays the same.
+
+### The description is not the only record
+
+Nothing that a reader will need after the pull request is merged is written
+only in its description. The design goes in `docs/architecture`, a decision
+goes in a decision record, an explanation of code goes in a comment, and the
+reason for a change goes in the commit message and the issue. The description
+summarizes these and says where they are.
+
+### No abstract references
+
+A reader should not need to count or look something up to know what is meant.
+
+- Name a milestone as the roadmap names it, or link to the roadmap. Write "the
+  Encryption milestone", not "milestone 11".
+- State a requirement, or link to where it is written.
+- Refer to a commit by its hash, not as "the fourth commit".
+- Refer to a document by its path or title.
+- When an issue is mentioned, give its link. A bare number is not enough in a
+  commit message, where it is not turned into a link.
+
+### Every pull request has an issue
+
+This applies to every pull request after the Documentation milestone, which
+is the first one in `docs/architecture/roadmap.md`.
+
+Each pull request has an issue that goes with it, and the description links
+to it. The issue describes:
+
+- The cause of the change.
+- What the change needs to do.
+- How the change was validated.
+- Any known issues left behind.
+
+The first two are written when the work starts. The last two are filled in
+before the pull request is submitted. `.github/ISSUE_TEMPLATE/change.md` has
+the sections.
 
 ## Technical rules
 

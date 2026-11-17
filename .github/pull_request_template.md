@@ -1,6 +1,22 @@
 ## What this changes
 
-<!-- What the change does and why. Write for a reader who has not seen the work. -->
+### Cause
+
+<!-- What made the change necessary: a fault, a missing feature, a decision. -->
+
+### Change
+
+<!-- What was changed. Write for a reader who has not seen the work. -->
+
+### Expected behavior
+
+<!-- What the library, the build, or a contributor does once this is merged,
+     and anything that deliberately stays the same. -->
+
+## Issue
+
+<!-- A link to the issue that goes with this pull request. Every pull request
+     after the Documentation milestone needs one. -->
 
 ## How it was tested
 

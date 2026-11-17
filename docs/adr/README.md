@@ -65,3 +65,4 @@ title or a link may follow. A bare number is not enough.
 | [0035](0035-byte-annotation.md) | A byte column is annotated as an unsigned 8-bit integer. |
 | [0036](0036-decimal-storage.md) | Decimals are stored as fixed-length bytes in the smallest width that fits. |
 | [0037](0037-arrow-schema-not-written-in-first-release.md) | The Arrow schema is not written in the first release. |
+| [0038](0038-rules-for-commits-pull-requests-and-issues.md) | Rules for commit messages, pull request descriptions, and issues. |
