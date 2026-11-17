@@ -29,7 +29,7 @@ title or a link may follow. A bare number is not enough.
 | File | Decision |
 |---|---|
 | [0001](0001-name-and-license.md) | The library is named Parquetry and licensed under MIT. |
-| [0002](0002-target-frameworks.md) | Target .NET 8 and .NET 10. Replaced: the library now targets .NET 10 only. |
+| [0002](0002-target-frameworks.md) | Target .NET 8 and .NET 10. Replaced by the decision to target .NET 10 only. |
 | [0003](0003-write-only-scope.md) | The library writes Parquet and does not read it. |
 | [0004](0004-row-group-layout-strategies.md) | Core chooses one of several strategies for laying out a row group, with in-memory buffering as the default. |
 | [0005](0005-destination-shapes.md) | Core defines two kinds of destination: sequential and staged. |

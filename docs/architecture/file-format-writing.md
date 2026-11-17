@@ -48,8 +48,8 @@ reports the error. The rules are therefore strict:
 - Text and bytes are compared as unsigned bytes.
 - A decimal stored as fixed-length bytes is compared as a signed number, not
   as unsigned bytes. Compared as bytes, a negative value would sort above a
-  positive one. Both pairs of statistics fields are written for it, as pyarrow
-  does.
+  positive one. The library writes both pairs of statistics fields for it, as
+  pyarrow does.
 - Where the right value is uncertain, the statistic is omitted.
 
 Floating-point columns have rules of their own, taken from the format
@@ -62,7 +62,7 @@ definition as it stood on 2026-11-16:
 - A minimum of zero is written as negative zero and a maximum of zero as
   positive zero, so that the range covers both.
 
-The format now defines a second ordering for floating-point columns, IEEE 754
+The format defines a second ordering for floating-point columns, IEEE 754
 total order, and recommends it over the original one. Older readers do not
 know it. Which ordering each profile uses is an open question, listed in the
 [architecture overview](README.md#open-questions).

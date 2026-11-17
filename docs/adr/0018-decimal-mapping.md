@@ -24,9 +24,10 @@ Spark and Delta support a precision of at most 38.
 ## Decision
 
 Option 1. The default is precision 38 and scale 18, which is also what Spark
-uses when it infers a decimal type from a Java `BigDecimal`. It can be changed in writer options and on individual properties. A
-value that cannot be stored exactly in the column's precision and scale raises
-an error that names the column. The library does not round.
+uses when it infers a decimal type from a Java `BigDecimal`. It can be changed
+in writer options and on individual properties. A value that cannot be stored
+exactly in the column's precision and scale raises an error that names the
+column. The library does not round.
 
 ## Consequences
 

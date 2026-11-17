@@ -16,8 +16,8 @@ the schema requires. The cases documented so far are:
 - A timestamp outside the range a nanosecond column can hold.
 
 The error is raised partway through a row, after some columns have already
-received their values for that row. The columns are then out of step with each
-other.
+received their values for that row. The columns then do not all hold the same
+number of rows.
 
 ## Options considered
 

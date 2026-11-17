@@ -8,8 +8,8 @@ Date: 2026-11-14
 .NET stores `DateTime`, `DateTimeOffset`, and `TimeSpan` in units of 100
 nanoseconds, so a value has seven decimal digits of a second. The default
 profile stores timestamps in microseconds, which have six, because Spark
-cannot read nanosecond timestamps in any version checked, 3.3 through 4.1. A value whose seventh digit is not zero
-cannot be stored exactly.
+cannot read nanosecond timestamps in any version checked, 3.3 through 4.1. A
+value whose seventh digit is not zero cannot be stored exactly.
 
 Most real values are affected. `DateTime.UtcNow` has 100-nanosecond
 resolution, and so does SQL Server's `datetime2` type by default.

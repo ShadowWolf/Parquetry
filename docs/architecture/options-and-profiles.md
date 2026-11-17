@@ -48,9 +48,9 @@ configuration package.
 Options cover, among other things: profile, codec, page size, row group size,
 memory budget, the policy for `DateTime` values of unspecified kind, whether
 timestamps may be truncated to microseconds, default decimal precision and
-scale, whether small decimals are stored as integers, whether statistics and the page index are written,
-user key-value metadata, and per-column settings such as codec, encoding, and
-bloom filter.
+scale, whether small decimals are stored as integers, whether statistics and
+the page index are written, user key-value metadata, and per-column settings
+such as codec, encoding, and bloom filter.
 
 ## How settings are resolved
 

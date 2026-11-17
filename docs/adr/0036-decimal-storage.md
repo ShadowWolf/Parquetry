@@ -95,11 +95,12 @@ Option 2, under the default profile.
 - At the default precision of 38, a decimal takes 16 bytes.
 - A .NET `decimal` holds at most 29 digits. A column set to precision 29 takes
   13 bytes.
-- Before encoding and compression, the bytes form takes the same space as the
-  integer form or less. After them it can be larger. With pyarrow's default
-  settings and 1,000,000 values, the two forms were within 4% of each other
-  in six of seven cases measured. In the seventh, a column of increasing
-  18-digit numbers, the bytes form was 5.2 MB and the integer form 4.3 MB.
+- Before encoding and compression, the fixed-length form takes the same space
+  as the integer form or less. After them it can be larger. With pyarrow's
+  default settings and 1,000,000 values, the two forms were within 4% of each
+  other in six of seven cases measured. In the seventh, a column of increasing
+  18-digit numbers, the fixed-length form was 5.2 MB and the integer form
+  4.3 MB.
   The measurements are in
   `docs/research/pyarrow-parity/decimal_size_output.txt`.
 - Minimum and maximum statistics for a fixed-length decimal are compared as

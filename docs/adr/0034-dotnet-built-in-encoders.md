@@ -34,6 +34,6 @@ library yet. It was released six days before this decision.
 - Until then, a user who needs Zstd supplies a codec through the codec
   interface. On .NET 11 that codec can be a thin wrapper over the built-in
   encoder.
-- The roadmap carries an item to look at the built-in encoders again before
+- The roadmap has an item to look at the built-in encoders again before
   work on a Zstd compressor starts. If they have proved reliable by then, a
   `net11.0` target that uses them is the cheaper path.

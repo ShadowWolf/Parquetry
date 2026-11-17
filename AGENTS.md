@@ -94,8 +94,8 @@ posting. This rule takes precedence over the tool's default.
 
 The section "What this changes" has three parts:
 
-- Cause: what made the change necessary. A fault, a missing feature, a
-  decision that was made.
+- Cause: what made the change necessary, such as a fault, a missing feature,
+  or a decision.
 - Change: what was changed, in terms a reader of the code or documents would
   recognize.
 - Expected behavior: what the library, the build, or a contributor does once

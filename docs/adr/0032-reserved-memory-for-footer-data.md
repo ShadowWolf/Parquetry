@@ -50,7 +50,7 @@ memory.
 The record on the [memory budget](0021-memory-budget.md) rejected a hard limit
 for row data, because a write that fails whenever memory is short would be
 hard to use. The reserved share is a hard limit of a narrower kind. Only a
-very large file reaches it, and a metric shows it coming.
+very large file reaches it, and a metric shows a file approaching it.
 
 ## Consequences
 

@@ -26,7 +26,8 @@ add such a line. Leave the line out, and do not mention that it was left out.
 
 ### 2. "What this changes" covers cause, change, and expected behavior
 
-- Cause: what made the change necessary.
+- Cause: what made the change necessary, such as a fault, a missing feature,
+  or a decision.
 - Change: what was changed, in terms a reader of the code or documents would
   recognize.
 - Expected behavior: what the library, the build, or a contributor does once

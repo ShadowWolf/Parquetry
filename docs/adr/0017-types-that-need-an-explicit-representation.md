@@ -39,7 +39,7 @@ that lists the choices.
   be used at run time. The rule therefore applies under every profile,
   including `Modern`.
 - The chosen representation is checked against the profile when the writer is
-  created. Choosing UUID under the default profile produces a validation
+  created. Choosing UUID under the default profile produces a compatibility
   message saying that Spark cannot read the column.
 - For a type the user does not own, the choice is made per .NET type on the
   context class, since attributes cannot be added to its properties.

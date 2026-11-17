@@ -4,8 +4,8 @@ Parquetry is a C# library that writes .NET objects to Parquet files. It is
 built for low, bounded memory use and high throughput, and it streams output to
 the destination where the Parquet format allows.
 
-**Status: design stage.** The architecture is documented and no library code
-exists yet. Nothing is published on NuGet.
+The project is at the design stage. The architecture is documented and no
+library code exists yet. Nothing is published on NuGet.
 
 ## Goals
 

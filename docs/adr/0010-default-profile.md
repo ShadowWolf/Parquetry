@@ -7,8 +7,8 @@ Date: 2026-11-14
 
 A user who sets no options should get a file that works wherever they send it.
 The readers the project verifies against are Apache Spark (including
-Databricks), pyarrow, Polars, DuckDB, and cloud warehouses. Spark is the strictest of
-these, and Databricks adds limits of its own through Delta Lake.
+Databricks), pyarrow, Polars, DuckDB, and cloud warehouses. Spark is the
+strictest of these, and Databricks adds limits of its own through Delta Lake.
 
 Research on 2026-11-14 checked Spark's source code for versions 3.3 through
 4.x, the Delta protocol, and Databricks documentation. The findings are in
@@ -68,9 +68,9 @@ profile will be added.
   the warehouses have been tested with them.
 - Files are larger and slower to read than they would be with newer encodings.
   Users who control their readers can choose `Modern`.
-- LZ4_RAW and Brotli are available but produce a compatibility message under this
-  profile. Spark reads LZ4_RAW only from version 3.5 and does not include a
-  Brotli codec.
+- LZ4_RAW and Brotli are available but produce a compatibility message under
+  this profile. Spark reads LZ4_RAW only from version 3.5 and does not include
+  a Brotli codec.
 - Column names containing a space or any of `,;{}()=`, a tab, or a newline
   are reported by validation, because Delta tables reject them unless column
   mapping is enabled. Names that differ only by letter case are also reported.

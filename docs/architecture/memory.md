@@ -32,7 +32,7 @@ The budget is a soft limit:
 - When usage reaches the limit of the row data part, the writer's `NeedsFlush`
   property becomes true. The caller is expected to call `FlushAsync` before
   the next `Write`.
-- If the caller does that, the most the row data part can be exceeded by is one
+- If the caller does that, usage can exceed the row data part by at most one
   row plus one page per column. A caller who does not flush has no limit.
 
 When a writer is created, the library works out the smallest budget that could
@@ -101,7 +101,7 @@ page index off, or splits the output into more files.
 So memory for row data is bounded by its part of the budget, and memory for
 footer data is bounded by the reserved share.
 
-Still to be decided, and listed in the
+These points are still to be decided, and are listed in the
 [architecture overview](README.md#open-questions):
 
 - Whether the share is set as a number of bytes or as a fraction of the
@@ -156,5 +156,5 @@ design has to say where the parallel work runs. This is an open question.
 ## Defaults
 
 The default page size, row group size, dictionary size limit, memory budget,
-and reserved share are not yet set. They will be chosen from benchmark results when the
-budget is built.
+and reserved share are not yet set. They will be chosen from benchmark results
+when the budget is built.

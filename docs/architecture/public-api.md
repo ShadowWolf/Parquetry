@@ -27,8 +27,8 @@ generated code through it. A type on a context class cannot be changed, so the
 context exposes an object for it and the caller passes that object.
 
 The third form builds its code when the writer is created. It has a different
-name so that a caller cannot fall into it by accident, and the compiler warns
-when it is used in a Native AOT or trimmed build.
+name so that a caller cannot use it by accident, and the compiler warns when
+it is used in a Native AOT or trimmed build.
 
 The destination is a `Stream` or any destination object. The S3 and Azure
 packages provide ways to create their destinations from the respective SDK
@@ -63,7 +63,7 @@ await writer.CompleteAsync(ct);
 
 | Member | Behavior |
 |---|---|
-| `Write(in T)` | Shreds the row into column buffers. Encodes and compresses a page when a buffer fills. No I/O, no allocation. |
+| `Write(in T)` | Shreds the row into column buffers. Encodes and compresses a page when a buffer fills. Does no I/O and does not allocate. |
 | `NeedsFlush` | True when the writer wants the caller to call `FlushAsync`: the part of the memory budget for row data is full, or a row group or segment is ready to be sent. Reading it costs one field read. |
 | `FlushAsync` | Sends data to the destination. If `NeedsFlush` is false it returns at once and does not close a row group early. |
 | `WriteAsync` | Calls `Write` for each row and `FlushAsync` whenever `NeedsFlush` is true. |

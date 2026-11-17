@@ -111,8 +111,8 @@ target out from the destination's limits, and its starting value will be set
 from benchmarks. During `FlushAsync`, the layout stages every pending segment
 that has reached the target size. If memory use is still at the limit for row
 data after that, it also stages the largest of the remaining pending
-segments, below the target size, until usage is under that limit. A segment staged during a flush
-holds pages of one column only.
+segments, below the target size, until usage is under that limit. A segment
+staged during a flush holds pages of one column only.
 
 When the row group closes, each column has two things left in memory: its
 dictionary page, which is only complete now, and the pages that were not yet
@@ -165,8 +165,8 @@ encrypted files are otherwise never identical.
 ## Completing, aborting, and failures
 
 `CompleteAsync` on the writer closes the last row group, whatever its size,
-writes the page index and footer, and then completes the destination. If the writer is disposed without that call, it
-aborts the destination.
+writes the page index and footer, and then completes the destination. If the
+writer is disposed without that call, it aborts the destination.
 
 | Destination | After an abort |
 |---|---|

@@ -10,7 +10,8 @@ that an INT32 holds a date. The format has two generations of annotation: the
 current logical types and the older converted types. Where an older converted
 type exists for a column, the writer writes both, as the format requires, so
 that old readers understand the file. For a time or a timestamp that is not
-adjusted to UTC, only the current annotation is written, as pyarrow does.
+adjusted to UTC, the writer writes only the current annotation, as pyarrow
+does.
 
 ## Simple types
 
@@ -97,8 +98,8 @@ and how the two forms compare in size, are described in the decision record
 
 A value that cannot be stored exactly raises an error naming the column. The
 library does not round. The precision can be set from 1 to 38. Spark and
-Delta Lake, the table format Databricks uses, support no more than 38, and a .NET `decimal` never has more than 29
-digits.
+Delta Lake, the table format Databricks uses, support no more than 38, and a
+.NET `decimal` never has more than 29 digits.
 
 ### DateTime
 
@@ -167,9 +168,10 @@ A property of one of these types fails the build unless the user chooses how to
 store it. The reason differs by type. In the versions checked, Spark cannot
 read the natural Parquet type for `Guid`, `TimeOnly`, and `Half`. The versions
 and the details are in
-[Spark and Databricks compatibility](spark-and-databricks-compatibility.md). Spark reads unsigned integers as a
-wider signed type, and Delta tables have no unsigned types. Parquet has no
-type for a length of time that the verified readers accept.
+[Spark and Databricks compatibility](spark-and-databricks-compatibility.md).
+Spark reads unsigned integers as a wider signed type, and Delta tables have no
+unsigned types. Parquet has no type for a length of time that the verified
+readers accept.
 
 | .NET type | Choices |
 |---|---|
