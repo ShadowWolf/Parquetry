@@ -110,8 +110,6 @@ Each of these gets a decision record when it is made.
 
 | Question | Where it matters |
 |---|---|
-| Does the project owner confirm the unsigned annotation on `byte` columns, now that a test shows Spark does not skip data when filtering on such a column? | [The byte annotation](../adr/0035-byte-annotation.md) |
-| Should the Arrow schema be written into the file's metadata, as pyarrow does? | [pyarrow parity](pyarrow-parity.md#differences-still-to-be-decided) |
 | What does the writer do when a staged destination runs out of segments? | [Memory](memory.md) |
 | Is the share of the budget reserved for footer data a number of bytes or a fraction of the budget, and how does it work when several writers use one budget? | [Memory](memory.md) |
 | When several writers share a budget, which one is asked to flush? | [Memory](memory.md) |
@@ -143,5 +141,6 @@ feature.
 | The interface through which a user supplies encryption keys. | [File format writing](file-format-writing.md) |
 | Whether the writer closes a stream the caller gave it. | [Layouts and destinations](layouts-and-destinations.md) |
 | The exact signatures of the methods that create a writer. | [Public API](public-api.md) |
+| Whether the statistics say that a minimum or maximum is exact, as pyarrow's do. | [pyarrow parity](pyarrow-parity.md#points-not-yet-settled-in-parquetry) |
 | The format version number written in the footer. | [pyarrow parity](pyarrow-parity.md#points-not-yet-settled-in-parquetry) |
 | Whether a value error also reports the position of the row in the caller's input. | [Public API](public-api.md) |

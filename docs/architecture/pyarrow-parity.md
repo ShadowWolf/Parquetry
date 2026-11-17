@@ -20,6 +20,7 @@ for the timestamp program. Each row below comes from one of these sources:
 | `docs/research/pyarrow-parity/probe.py` | Every row not listed in the entries below. Its output is saved beside it as `output.txt`, so a row can be checked without running anything. |
 | `docs/research/pyarrow-timestamp-probe.py` | The two rows about timestamps that lose digits. |
 | `docs/research/parquet-net-probe` | The statement about what Parquet.Net writes for an enum. |
+| `docs/research/pyarrow-parity/arrow_schema_key.py` | The format of the value pyarrow stores under the `ARROW:schema` key. Its output is saved beside it. |
 | `docs/research/pyarrow-parity/decimal_size.py` | The statistics pyarrow writes for a fixed-length decimal. Its output is saved beside it. |
 | [Spark and Databricks compatibility](spark-and-databricks-compatibility.md) | Every statement about Spark or Delta. Those come from reading Spark's source. Only the reading of decimals and of unsigned 8-bit columns has been tested by this project. |
 
@@ -28,9 +29,11 @@ shows is narrower. Under the default profile, each way the documents say
 Parquetry stores a type or lays out nested data is one that pyarrow itself
 writes, by default or with an option, and reads back. The last section of the
 program's output shows the read-back for the forms that are not pyarrow's
-default. Two things Parquetry writes are things pyarrow does not write at all:
-a count of NaN values, and shortened values in the page index. Both are in the
-table of deliberate differences. The `Modern` profile has not been compared.
+default. Three things Parquetry writes are things pyarrow does not write at
+all: a count of NaN values, shortened values in the page index, and the Spark
+version key in the file's metadata. Arrow's schema, which pyarrow writes into
+the file's metadata by default, is left out. All four are in the table of
+deliberate differences. The `Modern` profile has not been compared.
 The reader tests will confirm all of this with real files.
 
 ## Which Arrow type each .NET type is compared with
@@ -111,23 +114,18 @@ type in the table above.
 | The types in the previous section | Written with no choice needed. | A build error until the user chooses. | Given per type in that section. |
 | Enums | Arrow has no enum type. Its nearest type, a dictionary of text, is written as text. | The number by default, with text as an option. | The number is what Parquet.Net writes, which was checked by running it, and what `System.Text.Json` writes by default. |
 | Spark version key in the file's metadata | Not written. | Written under the default profile. | It lets Spark 3.x read dates before 1582. pyarrow reads a file that has the key with no change in the values. |
+| Arrow schema in the file's metadata | Written under the key `ARROW:schema`. pyarrow uses it on read to restore Arrow types that the Parquet schema does not record. | Not written in the first release. It may be added later. | The key's value is in a format of Arrow's, not Parquet's, so the library would need a separate writer for it. Without the key, pyarrow reads a `TimeSpan` stored as a count of microseconds as a plain 64-bit integer, not as a length of time. The unsigned 8-bit, TIME, UUID, and decimal columns that were compared came back as the same type with the key and without it. The comparison and the costs are in the [decision record](../adr/0037-arrow-schema-not-written-in-first-release.md). |
 | `created_by` | `parquet-cpp-arrow version 26.0.1` | `Parquetry version x.y.z (build <hash>)` | Each writer names itself. |
-
-## Differences still to be decided
-
-This is for the project owner.
-
-| Subject | pyarrow | Parquetry as documented | Notes |
-|---|---|---|---|
-| Arrow schema in the file's metadata | Written under the key `ARROW:schema`. pyarrow uses it on read to restore Arrow types that Parquet cannot express. | Not written. | In the run, three columns came back differently without it: a length of time came back as a plain 64-bit integer, a text column written from an Arrow dictionary came back as plain text, and a timestamp lost the name of its time zone and came back as UTC. The first affects a `TimeSpan` stored as a count. The second would affect an enum written as text, if the library declared it as a dictionary, which is not decided. The third does not apply, because a .NET `DateTimeOffset` carries an offset per value and not per column. The unsigned 8-bit, TIME, UUID, and decimal columns came back the same either way. Writing the key means producing Arrow's serialized schema format, and it makes the footer larger: for a file with 500 columns, pyarrow's footer was 94 KB with it and 60 KB without. |
 
 ## Points not yet settled in Parquetry
 
-For these, pyarrow's behavior is the starting point.
+These are points where Parquetry's own behavior is not decided yet, so there
+is nothing to compare. pyarrow's behavior is the starting point for each.
 
 | Subject | pyarrow | Notes |
 |---|---|---|
 | Text that is not valid UTF-8 | Converting such bytes to a string raises an error. The Parquet writer itself does not check: a string array built without that check is written as it is. | The open question is whether Parquetry raises an error or replaces the invalid part. pyarrow's checked path raises an error. |
+| Whether a minimum or maximum is exact | pyarrow wrote the fields `is_min_value_exact` and `is_max_value_exact` in the statistics of every column tested. | The documents do not say whether Parquetry writes these fields. To be settled when statistics are built. |
 | Version number in the footer | The footer's version field is 2. pyarrow's API calls this format version 2.6. | To be settled when the footer is built. |
 | Rows in a row group | At most 1,048,576. A write of 2,500,000 rows gave row groups of 1,048,576, 1,048,576, and 402,848 rows. | The defaults will be set from benchmarks. |
 | Size of a page | At most 20,000 rows. Pages of 8-byte values came out at 160 KB. Pages of 1,000-byte strings came out at about 2 MB. | The defaults will be set from benchmarks. |

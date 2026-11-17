@@ -45,14 +45,18 @@ type. The list is on the parity page.
 - Each new decision about written output starts with a pyarrow run.
 - [pyarrow parity](../architecture/pyarrow-parity.md) lists every comparison
   made so far: where the library matches, where it differs on purpose and
-  why, and where a difference is still to be decided.
+  why, and which points are not settled yet.
 - The first comparison, on 2026-11-16 against pyarrow 26.0.1, found that under
   the default profile each way the library stores a type or lays out nested
   data is one pyarrow itself writes, by default or with an option, and reads
   back. No Parquetry file exists yet, so this is not the same as pyarrow
   having read one. The reader tests will confirm it.
-- That comparison also found differences that had no decision behind them. The
-  parity page lists the ones that are still open.
+- That comparison also found differences that had no decision behind them.
+  Those that needed a decision by the project owner each have their own
+  record:
+  [a `byte` column carries an unsigned 8-bit annotation](0035-byte-annotation.md),
+  [decimals are stored as fixed-length bytes](0036-decimal-storage.md), and
+  [the Arrow schema is not written in the first release](0037-arrow-schema-not-written-in-first-release.md).
 - pyarrow's defaults change between its versions. The parity page records the
   version checked, and the comparison should be run again before each release
   of this library.

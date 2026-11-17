@@ -98,8 +98,23 @@ decimal. Its output from 2026-11-16 is saved as `decimal_size_output.txt`.
 uv run --no-project --with pyarrow==26.0.1 python docs/research/pyarrow-parity/decimal_size.py
 ```
 
+## What pyarrow stores under the Arrow schema key
+
+`pyarrow-parity/arrow_schema_key.py` writes a small file with pyarrow and
+prints what is stored under the `ARROW:schema` key of its metadata: base64
+text that decodes to a schema message of Arrow's IPC format, the format Arrow
+uses to pass data between processes. Its output from
+2026-11-16 is saved as `arrow_schema_key_output.txt`. It is quoted in the
+decision record on
+[the Arrow schema](../adr/0037-arrow-schema-not-written-in-first-release.md).
+
+```
+uv run --no-project --with pyarrow==26.0.1 python docs/research/pyarrow-parity/arrow_schema_key.py
+```
+
 ## Output files
 
 The pyarrow programs write small Parquet files to the folder they are run
-from and overwrite or remove them. `run.sh` writes its test files to a temp
+from and overwrite or remove them. `arrow_schema_key.py` is the exception and
+writes nothing to disk. `run.sh` writes its test files to a temp
 folder. None of these files is kept in the repository.

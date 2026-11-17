@@ -33,8 +33,11 @@ adjusted to UTC, only the current annotation is written, as pyarrow does.
 
 `byte` is unsigned in .NET, and its column carries an unsigned 8-bit
 annotation, as in pyarrow. Spark reads such a column as a 16-bit integer, but
-does not use its statistics to skip data when a query filters on it. It is the
-only unsigned annotation the default profile writes without being asked. The other unsigned types need an explicit choice, as described below.
+does not use its statistics to skip data when a query filters on it. Spark
+does use the statistics of a signed 16-bit column, so a user who needs fast
+filters in Spark can declare the property as `short`. This is the only
+unsigned annotation the default profile writes without being asked. The other
+unsigned types need an explicit choice, as described below.
 
 ### Required and optional columns
 

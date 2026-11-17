@@ -85,8 +85,10 @@ position and size of each column chunk, and key-value metadata.
   fixed when the feature is built.
 - Users can add their own key-value metadata.
 - pyarrow also writes Arrow's own schema into the key-value metadata, under
-  the key `ARROW:schema`. The library does not. Whether it should is an open
-  question on the [pyarrow parity](pyarrow-parity.md) page.
+  the key `ARROW:schema`, and uses it to restore Arrow types when it reads the
+  file. The first release of the library does not write this key. It may
+  be added later. The reasons are in the decision record on
+  [the Arrow schema](../adr/0037-arrow-schema-not-written-in-first-release.md).
 
 ## Page index
 

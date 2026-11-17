@@ -49,10 +49,8 @@ The test is in `docs/research/spark-decimal-check`.
 Option 2. A `byte` column is INT32 with an unsigned 8-bit annotation, in every
 profile.
 
-The project owner chose this before the test showed that Spark stops skipping
-data on such a column. That cost is listed as a point for the owner to
-confirm, in the
-[architecture overview](../architecture/README.md#open-questions).
+The project owner chose this before the test showed that Spark does not skip
+data on such a column, and confirmed the choice after seeing that result.
 
 ## Consequences
 
@@ -63,6 +61,11 @@ confirm, in the
 - A filter on a `byte` column is slower in Spark than it would be with the
   signed form, because Spark reads every row group. The answer is still
   right.
+- A user who needs Spark to skip data on such a column can declare the
+  property as `short`. A `short` column carries a signed 16-bit annotation,
+  and Spark uses its statistics. The property is then a `short` in the user's
+  class, and every reader sees a signed 16-bit column. This record adds no
+  option that stores a `byte` property in the signed form.
 - An `enum` whose underlying type is `byte` is stored the same way and has the
   same cost.
 - `byte` differs from `ushort`, `uint`, and `ulong` only in having a default.
