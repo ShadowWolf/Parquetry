@@ -1,0 +1,78 @@
+# A share of the memory budget is reserved for footer and page index data
+
+Status: accepted
+Date: 2026-11-16
+
+## Context
+
+The writer keeps a record of every page until the file is complete, because
+the page index and footer are written last. This memory grows with the file. A
+flush cannot free it. The memory budget and what a flush does are described in
+[Memory](../architecture/memory.md).
+
+With one budget for everything, growing footer data would leave less and less
+for row data. The writer would ask for flushes more often. With the layout
+that buffers a row group in memory, each flush closes a row group, so row
+groups would shrink, and smaller row groups add footer data faster.
+
+## Options considered
+
+1. One budget for everything, and an error when footer data approaches it.
+2. Reserve a share of the budget for footer data and give row data the rest.
+3. One budget for everything, and leave it to the user to start a new file
+   before the problem arises.
+
+## Decision
+
+Option 2.
+
+- A share of the budget is set aside for page index and footer records.
+- Everything else is charged to the rest of the budget: values, dictionaries,
+  held pages, working space, the bloom filters of the open row group, and
+  pages the writer has handed to a destination that has not yet accepted
+  them. This is called the row data part. Memory that a destination holds
+  itself, such as S3 part buffers, is a separate open question.
+- The writer's `NeedsFlush` property becomes true when the row data part is
+  full, not when the whole budget is.
+- The size of the share is a setting. Its default will be chosen from
+  benchmarks, with the other defaults.
+
+When the reserved share is used up, the writer raises an error that names the
+setting. `Write` raises it, at the point where it finishes a page and there is
+no room left for the page's record. The error ends the write and the file is
+aborted, under the rule in
+[a value that cannot be written ends the write](0033-value-error-ends-the-write.md).
+
+The alternative at that point was to continue over the budget and report it.
+It was rejected because the budget would then no longer limit the writer's
+memory.
+
+The record on the [memory budget](0021-memory-budget.md) rejected a hard limit
+for row data, because a write that fails whenever memory is short would be
+hard to use. The reserved share is a hard limit of a narrower kind. Only a
+very large file reaches it, and a metric shows a file approaching it.
+
+## Consequences
+
+- While the share has room, growth in footer data does not cause extra
+  flushes or smaller row groups.
+- The row data part is smaller than the budget from the first row. With the
+  buffered layout, row groups are therefore somewhat smaller than they would
+  be without a reserved share.
+- The smallest workable budget, computed when a writer is created, includes
+  the reserved share.
+- The amount of the share in use is reported as a metric, so a user can see a
+  large file approaching the limit.
+- A user who turns the page index off needs a much smaller share, because the
+  footer alone holds one record for each column in each row group and not one
+  for each page.
+- The budget limits the writer's memory for both row data and footer data.
+- A very large file with a small share fails late in the write, and the file
+  is lost. The metric is the only warning before that. The user then starts
+  again with a larger share, with the page index off, or with the output
+  split into more files.
+- These points are still to be decided, and are listed as open questions in
+  the [architecture overview](../architecture/README.md#open-questions):
+  - Whether the share is set as a number of bytes or as a fraction of the
+    budget.
+  - How the share works when several writers use one budget.

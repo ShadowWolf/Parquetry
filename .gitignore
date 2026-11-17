@@ -1,0 +1,4 @@
+bin/
+obj/
+*.parquet
+__pycache__/

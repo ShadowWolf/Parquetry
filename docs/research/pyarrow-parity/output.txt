@@ -1,0 +1,203 @@
+pyarrow 26.0.1
+
+== writer defaults (arguments of ParquetWriter) ==
+flavor = None
+version = '2.6'
+use_dictionary = True
+compression = 'snappy'
+write_statistics = True
+use_deprecated_int96_timestamps = None
+compression_level = None
+use_byte_stream_split = False
+column_encoding = None
+data_page_version = '1.0'
+use_compliant_nested_type = True
+encryption_properties = None
+write_batch_size = None
+dictionary_pagesize_limit = None
+store_schema = True
+write_page_index = False
+write_page_checksum = False
+sorting_columns = None
+store_decimal_as_integer = False
+write_time_adjusted_to_utc = False
+max_rows_per_page = None
+bloom_filter_options = None
+use_content_defined_chunking = False
+
+== integers ==
+int8: v: INT32 logical=Int(bitWidth=8, isSigned=true) converted=INT_8 max_def=1 max_rep=0
+int16: v: INT32 logical=Int(bitWidth=16, isSigned=true) converted=INT_16 max_def=1 max_rep=0
+int32: v: INT32 logical=None converted=NONE max_def=1 max_rep=0
+int64: v: INT64 logical=None converted=NONE max_def=1 max_rep=0
+uint8: v: INT32 logical=Int(bitWidth=8, isSigned=false) converted=UINT_8 max_def=1 max_rep=0
+uint16: v: INT32 logical=Int(bitWidth=16, isSigned=false) converted=UINT_16 max_def=1 max_rep=0
+uint32: v: INT32 logical=Int(bitWidth=32, isSigned=false) converted=UINT_32 max_def=1 max_rep=0
+uint64: v: INT64 logical=Int(bitWidth=64, isSigned=false) converted=UINT_64 max_def=1 max_rep=0
+
+== floats, bool, text, bytes ==
+halffloat: v: FIXED_LEN_BYTE_ARRAY(2) logical=Float16 converted=NONE max_def=1 max_rep=0
+float: v: FLOAT logical=None converted=NONE max_def=1 max_rep=0
+double: v: DOUBLE logical=None converted=NONE max_def=1 max_rep=0
+bool: v: BOOLEAN logical=None converted=NONE max_def=1 max_rep=0
+string: v: BYTE_ARRAY logical=String converted=UTF8 max_def=1 max_rep=0
+binary: v: BYTE_ARRAY logical=None converted=NONE max_def=1 max_rep=0
+fixed_size_binary[16]: v: FIXED_LEN_BYTE_ARRAY(16) logical=None converted=NONE max_def=1 max_rep=0
+
+== uuid ==
+uuid: v: FIXED_LEN_BYTE_ARRAY(16) logical=UUID converted=NONE max_def=1 max_rep=0
+uuid: the bytes are stored in the order of the text digits: True
+
+== dates, times, lengths of time ==
+date32[day]: v: INT32 logical=Date converted=DATE max_def=1 max_rep=0
+time64[us]: v: INT64 logical=Time(isAdjustedToUTC=false, timeUnit=microseconds) converted=NONE max_def=1 max_rep=0
+time64[ns]: v: INT64 logical=Time(isAdjustedToUTC=false, timeUnit=nanoseconds) converted=NONE max_def=1 max_rep=0
+duration[us]: v: INT64 logical=None converted=NONE max_def=1 max_rep=0
+duration[ns]: v: INT64 logical=None converted=NONE max_def=1 max_rep=0
+month_day_nano_interval: ERROR ArrowNotImplementedError: Unhandled type for Arrow to Parquet schema conversion: month_day_nano_interval
+
+== timestamps: the unit and time zone of the Arrow type decide what is written ==
+timestamp[s, tz=UTC]: v: INT64 logical=Timestamp(isAdjustedToUTC=true, timeUnit=milliseconds, is_from_converted_type=false, force_set_converted_type=false) converted=TIMESTAMP_MILLIS max_def=1 max_rep=0
+timestamp[ms, tz=UTC]: v: INT64 logical=Timestamp(isAdjustedToUTC=true, timeUnit=milliseconds, is_from_converted_type=false, force_set_converted_type=false) converted=TIMESTAMP_MILLIS max_def=1 max_rep=0
+timestamp[us, tz=UTC]: v: INT64 logical=Timestamp(isAdjustedToUTC=true, timeUnit=microseconds, is_from_converted_type=false, force_set_converted_type=false) converted=TIMESTAMP_MICROS max_def=1 max_rep=0
+timestamp[ns, tz=UTC]: v: INT64 logical=Timestamp(isAdjustedToUTC=true, timeUnit=nanoseconds, is_from_converted_type=false, force_set_converted_type=false) converted=NONE max_def=1 max_rep=0
+timestamp[us]: v: INT64 logical=Timestamp(isAdjustedToUTC=false, timeUnit=microseconds, is_from_converted_type=false, force_set_converted_type=false) converted=NONE max_def=1 max_rep=0
+timestamp[ns]: v: INT64 logical=Timestamp(isAdjustedToUTC=false, timeUnit=nanoseconds, is_from_converted_type=false, force_set_converted_type=false) converted=NONE max_def=1 max_rep=0
+timestamp[us, tz=Europe/Berlin]: v: INT64 logical=Timestamp(isAdjustedToUTC=true, timeUnit=microseconds, is_from_converted_type=false, force_set_converted_type=false) converted=TIMESTAMP_MICROS max_def=1 max_rep=0
+a Python datetime with no time zone becomes: timestamp[us]
+a Python datetime in UTC becomes: timestamp[us, tz=UTC]
+a Python datetime at +02:00 becomes: timestamp[us, tz=+02:00]
+12:00 at +02:00, read back without the Arrow schema: [datetime.datetime(2024, 5, 6, 10, 0, tzinfo=zoneinfo.ZoneInfo(key='UTC'))]
+year 1 as microseconds: v: INT64 logical=Timestamp(isAdjustedToUTC=true, timeUnit=microseconds, is_from_converted_type=false, force_set_converted_type=false) converted=TIMESTAMP_MICROS max_def=1 max_rep=0
+year 1 as nanoseconds: building the array failed: ERROR ArrowInvalid: Could not convert datetime.datetime(1, 1, 1, 0, 0, tzinfo=datetime.timezone.utc) with type datetime.datetime: out of bounds for nanosecond resolution
+
+== decimals: storage by precision ==
+default: precision 1 to 2 -> FIXED_LEN_BYTE_ARRAY(1)
+default: precision 3 to 4 -> FIXED_LEN_BYTE_ARRAY(2)
+default: precision 5 to 6 -> FIXED_LEN_BYTE_ARRAY(3)
+default: precision 7 to 9 -> FIXED_LEN_BYTE_ARRAY(4)
+default: precision 10 to 11 -> FIXED_LEN_BYTE_ARRAY(5)
+default: precision 12 to 14 -> FIXED_LEN_BYTE_ARRAY(6)
+default: precision 15 to 16 -> FIXED_LEN_BYTE_ARRAY(7)
+default: precision 17 to 18 -> FIXED_LEN_BYTE_ARRAY(8)
+default: precision 19 to 21 -> FIXED_LEN_BYTE_ARRAY(9)
+default: precision 22 to 23 -> FIXED_LEN_BYTE_ARRAY(10)
+default: precision 24 to 26 -> FIXED_LEN_BYTE_ARRAY(11)
+default: precision 27 to 28 -> FIXED_LEN_BYTE_ARRAY(12)
+default: precision 29 to 31 -> FIXED_LEN_BYTE_ARRAY(13)
+default: precision 32 to 33 -> FIXED_LEN_BYTE_ARRAY(14)
+default: precision 34 to 35 -> FIXED_LEN_BYTE_ARRAY(15)
+default: precision 36 to 38 -> FIXED_LEN_BYTE_ARRAY(16)
+store_decimal_as_integer=True: precision 1 to 9 -> INT32
+store_decimal_as_integer=True: precision 10 to 18 -> INT64
+store_decimal_as_integer=True: precision 19 to 21 -> FIXED_LEN_BYTE_ARRAY(9)
+store_decimal_as_integer=True: precision 22 to 23 -> FIXED_LEN_BYTE_ARRAY(10)
+store_decimal_as_integer=True: precision 24 to 26 -> FIXED_LEN_BYTE_ARRAY(11)
+store_decimal_as_integer=True: precision 27 to 28 -> FIXED_LEN_BYTE_ARRAY(12)
+store_decimal_as_integer=True: precision 29 to 31 -> FIXED_LEN_BYTE_ARRAY(13)
+store_decimal_as_integer=True: precision 32 to 33 -> FIXED_LEN_BYTE_ARRAY(14)
+store_decimal_as_integer=True: precision 34 to 35 -> FIXED_LEN_BYTE_ARRAY(15)
+store_decimal_as_integer=True: precision 36 to 38 -> FIXED_LEN_BYTE_ARRAY(16)
+decimal256(50,2): v: FIXED_LEN_BYTE_ARRAY(21) logical=Decimal(precision=50, scale=2) converted=DECIMAL max_def=1 max_rep=0
+a Python Decimal('1.50') becomes: decimal128(3, 2)
+
+== decimals: values that do not fit ==
+1.234 into decimal(5,2): building the array failed: ERROR ArrowInvalid: Rescaling Decimal value would cause data loss
+12345.6 into decimal(5,2): building the array failed: ERROR ArrowInvalid: Decimal type with precision 6 does not fit into precision inferred from first array element: 5
+cast 12345.67 from (7,2) to (5,2), safe=True: ERROR ArrowInvalid: Decimal value does not fit in precision 5
+cast 12345.67 from (7,2) to (5,2), safe=False: written; read back [Decimal('12345.67')]
+
+== dictionary of text, which is Arrow's nearest type to an enum ==
+dictionary<string>: v: BYTE_ARRAY logical=String converted=UTF8 max_def=1 max_rep=0
+
+== required columns and nulls ==
+non-nullable field: v: BYTE_ARRAY logical=String converted=UTF8 max_def=0 max_rep=0
+casting a column with a null to non-nullable: ERROR ValueError: Casting field 'v' with null values to non-nullable
+writing a non-nullable column that holds a null: ERROR ArrowInvalid: Column 'v' is declared non-nullable but contains nulls
+
+== nested types ==
+list<int32>, nullable elements: v.list.element: INT32 logical=None converted=NONE max_def=3 max_rep=1
+list<int32 not null>: v.list.element: INT32 logical=None converted=NONE max_def=2 max_rep=1
+list with use_compliant_nested_type=False: v.list.item: INT32 logical=None converted=NONE max_def=3 max_rep=1
+map<string,int32>: v.key_value.key: BYTE_ARRAY logical=String converted=UTF8 max_def=2 max_rep=1
+map<string,int32>: v.key_value.value: INT32 logical=None converted=NONE max_def=3 max_rep=1
+struct: v.a: INT32 logical=None converted=NONE max_def=2 max_rep=0
+struct: v.b: BYTE_ARRAY logical=String converted=UTF8 max_def=2 max_rep=0
+struct with no fields: ERROR ArrowNotImplementedError: Cannot write struct type 'v' with no child field to Parquet. Consider adding a dummy child field.
+
+== a file written with default settings: footer and first pages ==
+created_by: b'parquet-cpp-arrow version 26.0.1'
+version field in the footer: 2 | pyarrow reports format_version 2.6
+key-value metadata keys: [b'ARROW:schema']
+column_orders present: True
+int64: compression=SNAPPY encodings=('PLAIN', 'RLE', 'RLE_DICTIONARY') dictionary page=True
+int64: first data page is data page version 1
+int64: statistics fields written: ['max (older)', 'min (older)', 'null_count', 'max_value', 'min_value', 'is_max_value_exact', 'is_min_value_exact']
+int64: page index written: column index=False offset index=False
+int64: bloom filter written: False
+text: compression=SNAPPY encodings=('PLAIN', 'RLE', 'RLE_DICTIONARY') dictionary page=True
+text: first data page is data page version 1
+text: statistics fields written: ['null_count', 'max_value', 'min_value', 'is_max_value_exact', 'is_min_value_exact']
+text: page index written: column index=False offset index=False
+text: bloom filter written: False
+double: compression=SNAPPY encodings=('PLAIN', 'RLE', 'RLE_DICTIONARY') dictionary page=True
+double: first data page is data page version 1
+double: statistics fields written: ['max (older)', 'min (older)', 'null_count', 'max_value', 'min_value', 'is_max_value_exact', 'is_min_value_exact']
+double: page index written: column index=False offset index=False
+double: bloom filter written: False
+bool: compression=SNAPPY encodings=('RLE', 'PLAIN') dictionary page=False
+bool: first data page is data page version 1
+bool: statistics fields written: ['max (older)', 'min (older)', 'null_count', 'max_value', 'min_value', 'is_max_value_exact', 'is_min_value_exact']
+bool: page index written: column index=False offset index=False
+bool: bloom filter written: False
+uint8: compression=SNAPPY encodings=('PLAIN', 'RLE', 'RLE_DICTIONARY') dictionary page=True
+uint8: first data page is data page version 1
+uint8: statistics fields written: ['null_count', 'max_value', 'min_value', 'is_max_value_exact', 'is_min_value_exact']
+uint8: page index written: column index=False offset index=False
+uint8: bloom filter written: False
+
+== floating-point statistics ==
+some NaN among numbers: min=1.0 max=5.0
+every value NaN: no min or max written
+only +0.0: min=-0.0 max=0.0
+only -0.0: min=-0.0 max=0.0
++0.0 and 5.0: min=-0.0 max=5.0
+-5.0 and -0.0: min=-5.0 max=0.0
+
+== page index, when turned on with write_page_index=True ==
+int64: column index=True offset index=True
+int64: column index has nan_counts: False; length of the first page's min and max: 8 and 8 bytes
+int64: length of the chunk's max_value and min_value: 8 and 8 bytes
+long_text: column index=True offset index=True
+long_text: column index has nan_counts: False; length of the first page's min and max: 206 and 206 bytes
+long_text: length of the chunk's max_value and min_value: 206 and 206 bytes
+one_all_nan_page: column index=False offset index=True
+one_all_nan_page: length of the chunk's max_value and min_value: 8 and 8 bytes
+
+== default sizes ==
+2,500,000 rows -> rows per row group: [1048576, 1048576, 402848]
+300,000 int64 values, no dictionary, no compression -> 15 pages; rows in the first page: 20000; bytes in the first page: 160031
+5,000 strings of 1,000 bytes -> 3 pages; bytes in the first page: 2056223
+
+== what pyarrow reads back when the Arrow schema is not in the file ==
+store_schema=True: {'duration_us': 'duration[us]', 'dictionary_of_text': 'dictionary<values=string, indices=int32, ordered=0>', 'timestamp_berlin': 'timestamp[us, tz=Europe/Berlin]', 'timestamp_utc': 'timestamp[us, tz=UTC]', 'uuid': 'extension<arrow.uuid>', 'uint8': 'uint8', 'time_us': 'time64[us]', 'decimal': 'decimal128(9, 2)'}
+store_schema=False: {'duration_us': 'int64', 'dictionary_of_text': 'string', 'timestamp_berlin': 'timestamp[us, tz=UTC]', 'timestamp_utc': 'timestamp[us, tz=UTC]', 'uuid': 'extension<arrow.uuid>', 'uint8': 'uint8', 'time_us': 'time64[us]', 'decimal': 'decimal128(9, 2)'}
+footer of a file with 500 int64 columns: 94451 bytes with the Arrow schema, 60190 bytes without
+
+== text that is not valid UTF-8 ==
+a Python string holding half of a two-unit character: building the array failed: ERROR UnicodeEncodeError: 'utf-8' codec can't encode character '\ud800' in position 0: surrogates not allowed
+casting the bytes ff fe to string: ERROR ArrowInvalid: Invalid UTF8 payload
+writing a string array that holds the bytes ff fe, built without a check: v: BYTE_ARRAY logical=String converted=UTF8 max_def=1 max_rep=0
+
+== column names ==
+a name with a space and a comma: a b,c: INT64 logical=None converted=NONE max_def=1 max_rep=0
+two names that differ only by case: A: INT64 logical=None converted=NONE max_def=1 max_rep=0
+two names that differ only by case: a: INT64 logical=None converted=NONE max_def=1 max_rep=0
+
+== forms Parquetry writes that are not pyarrow's default: written by pyarrow with options, then read back ==
+decimal(9,2) as INT32, which is an option in Parquetry too: read back as decimal128(9, 2) [Decimal('1.50')]
+Guid as 16 fixed-length bytes with no annotation: read back as fixed_size_binary[16] [b'\x00\x11"3DUfw\x88\x99\xaa\xbb\xcc\xdd\xee\xff']
+TimeSpan as a 64-bit count: read back as int64 [90000000]
+page index on: read back as int64 [1, 2, 3]
+list with required elements: read back as list<element: int32 not null> [[1]]
+a file with the key org.apache.spark.version and a date in 1500: read back [datetime.date(1500, 1, 1)]

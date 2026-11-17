@@ -1,0 +1,6 @@
+pyarrow 26.0.1
+the stored value: 268 bytes, starting b'/////8AAAAAQAAAA'
+decoded from base64: 200 bytes, starting ffffffffc0000000
+read as a schema message of Arrow's IPC format:
+  length_of_time: duration[us]
+  number: int64

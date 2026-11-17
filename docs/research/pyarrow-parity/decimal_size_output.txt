@@ -1,0 +1,38 @@
+pyarrow 26.0.1 | bytes in the column chunk(s), 1,000,000 values
+decimal(9,2), random over the full range
+  default (dictionary, Snappy): bytes form 4,571,384 / integer form 4,571,384
+  PLAIN, Snappy: bytes form 4,003,500 / integer form 4,003,500
+  PLAIN, no compression: bytes form 4,003,050 / integer form 4,003,050
+  zstd, bytes form PLAIN 4,003,650 / integer form DELTA_BINARY_PACKED 4,074,846
+decimal(9,2), amounts 0.00 to 999.99
+  default (dictionary, Snappy): bytes form 2,515,424 / integer form 2,515,424
+  PLAIN, Snappy: bytes form 4,003,503 / integer form 4,003,500  <-- integer smaller
+  PLAIN, no compression: bytes form 4,003,050 / integer form 4,003,050
+  zstd, bytes form PLAIN 2,665,854 / integer form DELTA_BINARY_PACKED 2,308,577  <-- integer smaller
+decimal(18,2), random over the full range
+  default (dictionary, Snappy): bytes form 8,275,184 / integer form 8,275,184
+  PLAIN, Snappy: bytes form 8,004,450 / integer form 8,004,450
+  PLAIN, no compression: bytes form 8,003,850 / integer form 8,003,850
+  zstd, bytes form PLAIN 8,004,600 / integer form DELTA_BINARY_PACKED 7,819,089  <-- integer smaller
+decimal(18,2), amounts 0.00 to 99999.99
+  default (dictionary, Snappy): bytes form 5,643,836 / integer form 5,476,912  <-- integer smaller
+  PLAIN, Snappy: bytes form 5,375,534 / integer form 5,208,444  <-- integer smaller
+  PLAIN, no compression: bytes form 8,003,850 / integer form 8,003,850
+  zstd, bytes form PLAIN 3,498,687 / integer form DELTA_BINARY_PACKED 3,146,173  <-- integer smaller
+decimal(18,0), increasing by 1 (an id)
+  default (dictionary, Snappy): bytes form 5,228,852 / integer form 4,277,087  <-- integer smaller
+  PLAIN, Snappy: bytes form 4,957,861 / integer form 4,006,416  <-- integer smaller
+  PLAIN, no compression: bytes form 8,003,850 / integer form 8,003,850
+  zstd, bytes form PLAIN 1,021,832 / integer form DELTA_BINARY_PACKED 5,400  <-- integer smaller
+decimal(12,2), amounts 0.00 to 99999.99
+  default (dictionary, Snappy): bytes form 5,631,278 / integer form 5,476,479  <-- integer smaller
+  PLAIN, Snappy: bytes form 5,269,661 / integer form 5,208,009  <-- integer smaller
+  PLAIN, no compression: bytes form 6,003,450 / integer form 8,003,850
+  zstd, bytes form PLAIN 3,737,141 / integer form DELTA_BINARY_PACKED 3,145,913  <-- integer smaller
+decimal(10,2), amounts 0.00 to 99999.99
+  default (dictionary, Snappy): bytes form 5,445,379 / integer form 5,476,811
+  PLAIN, Snappy: bytes form 5,003,715 / integer form 5,208,407
+  PLAIN, no compression: bytes form 5,003,250 / integer form 8,003,850
+  zstd, bytes form PLAIN 3,611,879 / integer form DELTA_BINARY_PACKED 3,145,287  <-- integer smaller
+fixed-length decimal(9,2) statistics fields: ['max (older)', 'min (older)', 'null_count', 'max_value', 'min_value', 'is_max_value_exact', 'is_min_value_exact'] min_value bytes ffffff6a max_value bytes 000000e1
+column_orders: [{1: {}}]

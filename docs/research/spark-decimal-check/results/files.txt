@@ -1,0 +1,15 @@
+pyarrow 26.0.1
+flat_flba_dict: row groups=4 encodings=[('PLAIN', 'RLE', 'RLE_DICTIONARY')] types={'p1': ('FIXED_LEN_BYTE_ARRAY', 1), 'p9': ('FIXED_LEN_BYTE_ARRAY', 4), 'p18': ('FIXED_LEN_BYTE_ARRAY', 8), 'p20': ('FIXED_LEN_BYTE_ARRAY', 9), 'p38': ('FIXED_LEN_BYTE_ARRAY', 16)}
+flat_flba_plain: row groups=4 encodings=[('PLAIN', 'RLE')] types={'p1': ('FIXED_LEN_BYTE_ARRAY', 1), 'p9': ('FIXED_LEN_BYTE_ARRAY', 4), 'p18': ('FIXED_LEN_BYTE_ARRAY', 8), 'p20': ('FIXED_LEN_BYTE_ARRAY', 9), 'p38': ('FIXED_LEN_BYTE_ARRAY', 16)}
+flat_flba_fallback: row groups=4 encodings=[('PLAIN', 'RLE', 'RLE_DICTIONARY')] types={'p1': ('FIXED_LEN_BYTE_ARRAY', 1), 'p9': ('FIXED_LEN_BYTE_ARRAY', 4), 'p18': ('FIXED_LEN_BYTE_ARRAY', 8), 'p20': ('FIXED_LEN_BYTE_ARRAY', 9), 'p38': ('FIXED_LEN_BYTE_ARRAY', 16)}
+flat_int_dict: row groups=4 encodings=[('PLAIN', 'RLE', 'RLE_DICTIONARY')] types={'p1': ('INT32', 0), 'p9': ('INT32', 0), 'p18': ('INT64', 0), 'p20': ('FIXED_LEN_BYTE_ARRAY', 9), 'p38': ('FIXED_LEN_BYTE_ARRAY', 16)}
+flat_int_plain: row groups=4 encodings=[('PLAIN', 'RLE')] types={'p1': ('INT32', 0), 'p9': ('INT32', 0), 'p18': ('INT64', 0), 'p20': ('FIXED_LEN_BYTE_ARRAY', 9), 'p38': ('FIXED_LEN_BYTE_ARRAY', 16)}
+flat_int_fallback: row groups=4 encodings=[('PLAIN', 'RLE', 'RLE_DICTIONARY')] types={'p1': ('INT32', 0), 'p9': ('INT32', 0), 'p18': ('INT64', 0), 'p20': ('FIXED_LEN_BYTE_ARRAY', 9), 'p38': ('FIXED_LEN_BYTE_ARRAY', 16)}
+nested_flba_dict: row groups=3
+nested_flba_plain: row groups=3
+nested_int_dict: row groups=3
+nested_int_plain: row groups=3
+sorted_flba_dict: row groups=12 s9 stats rg0 min=-999999.999 max=-833638.939 last min=833638.938 max=999999.999
+sorted_flba_plain: row groups=12 s9 stats rg0 min=-999999.999 max=-833638.939 last min=833638.938 max=999999.999
+sorted_int_dict: row groups=12 s9 stats rg0 min=-999999.999 max=-833638.939 last min=833638.938 max=999999.999
+sorted_int_plain: row groups=12 s9 stats rg0 min=-999999.999 max=-833638.939 last min=833638.938 max=999999.999

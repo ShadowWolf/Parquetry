@@ -1,0 +1,183 @@
+RESULT Spark 3.3.3
+RESULT PASS flat_flba_dict, vectorized true: 49 columns, 6000 rows
+RESULT PASS flat_flba_dict, vectorized false: 49 columns, 6000 rows
+RESULT PASS flat_flba_plain, vectorized true: 49 columns, 6000 rows
+RESULT PASS flat_flba_plain, vectorized false: 49 columns, 6000 rows
+RESULT PASS flat_flba_fallback, vectorized true: 49 columns, 6000 rows
+RESULT PASS flat_flba_fallback, vectorized false: 49 columns, 6000 rows
+RESULT PASS flat_int_dict, vectorized true: 49 columns, 6000 rows
+RESULT PASS flat_int_dict, vectorized false: 49 columns, 6000 rows
+RESULT PASS flat_int_plain, vectorized true: 49 columns, 6000 rows
+RESULT PASS flat_int_plain, vectorized false: 49 columns, 6000 rows
+RESULT PASS flat_int_fallback, vectorized true: 49 columns, 6000 rows
+RESULT PASS flat_int_fallback, vectorized false: 49 columns, 6000 rows
+RESULT PASS nested_flba_dict, vectorized true: 2000 rows; {'st': 'struct<a:decimal(9,2),b:decimal(18,4),c:decimal(38,10),u:smallint>', 'list_u8': 'array<smallint>'}
+RESULT PASS nested_flba_dict, vectorized false: 2000 rows; {'st': 'struct<a:decimal(9,2),b:decimal(18,4),c:decimal(38,10),u:smallint>', 'list_u8': 'array<smallint>'}
+RESULT PASS nested_flba_plain, vectorized true: 2000 rows; {'st': 'struct<a:decimal(9,2),b:decimal(18,4),c:decimal(38,10),u:smallint>', 'list_u8': 'array<smallint>'}
+RESULT PASS nested_flba_plain, vectorized false: 2000 rows; {'st': 'struct<a:decimal(9,2),b:decimal(18,4),c:decimal(38,10),u:smallint>', 'list_u8': 'array<smallint>'}
+RESULT PASS nested_int_dict, vectorized true: 2000 rows; {'st': 'struct<a:decimal(9,2),b:decimal(18,4),c:decimal(38,10),u:smallint>', 'list_u8': 'array<smallint>'}
+RESULT PASS nested_int_dict, vectorized false: 2000 rows; {'st': 'struct<a:decimal(9,2),b:decimal(18,4),c:decimal(38,10),u:smallint>', 'list_u8': 'array<smallint>'}
+RESULT PASS nested_int_plain, vectorized true: 2000 rows; {'st': 'struct<a:decimal(9,2),b:decimal(18,4),c:decimal(38,10),u:smallint>', 'list_u8': 'array<smallint>'}
+RESULT PASS nested_int_plain, vectorized false: 2000 rows; {'st': 'struct<a:decimal(9,2),b:decimal(18,4),c:decimal(38,10),u:smallint>', 'list_u8': 'array<smallint>'}
+RESULT PASS sorted_flba_dict, vectorized true: all filter counts right; rows scanned of 6000: {'s9.eq_mid_neg': 400, 's18.lt0': 3000, 's38.eq_last': 100, 'u8 = 200': 6000, 'i16 = 200': 500, 'u8 < 10': 6000, 'i16 < 10': 500}
+RESULT PASS sorted_flba_dict, vectorized false: all filter counts right; rows scanned of 6000: {'s9.eq_mid_neg': 400, 's18.lt0': 3000, 's38.eq_last': 100, 'u8 = 200': 6000, 'i16 = 200': 500, 'u8 < 10': 6000, 'i16 < 10': 500}
+RESULT PASS sorted_flba_plain, vectorized true: all filter counts right; rows scanned of 6000: {'s9.eq_mid_neg': 300, 's18.lt0': 3000, 's38.eq_last': 100, 'u8 = 200': 6000, 'i16 = 200': 300, 'u8 < 10': 6000, 'i16 < 10': 300}
+RESULT PASS sorted_flba_plain, vectorized false: all filter counts right; rows scanned of 6000: {'s9.eq_mid_neg': 300, 's18.lt0': 3000, 's38.eq_last': 100, 'u8 = 200': 6000, 'i16 = 200': 300, 'u8 < 10': 6000, 'i16 < 10': 300}
+RESULT PASS sorted_int_dict, vectorized true: all filter counts right; rows scanned of 6000: {'s9.eq_mid_neg': 400, 's18.lt0': 3000, 's38.eq_last': 100, 'u8 = 200': 6000, 'i16 = 200': 500, 'u8 < 10': 6000, 'i16 < 10': 500}
+RESULT PASS sorted_int_dict, vectorized false: all filter counts right; rows scanned of 6000: {'s9.eq_mid_neg': 400, 's18.lt0': 3000, 's38.eq_last': 100, 'u8 = 200': 6000, 'i16 = 200': 500, 'u8 < 10': 6000, 'i16 < 10': 500}
+RESULT PASS sorted_int_plain, vectorized true: all filter counts right; rows scanned of 6000: {'s9.eq_mid_neg': 300, 's18.lt0': 3000, 's38.eq_last': 100, 'u8 = 200': 6000, 'i16 = 200': 300, 'u8 < 10': 6000, 'i16 < 10': 300}
+RESULT PASS sorted_int_plain, vectorized false: all filter counts right; rows scanned of 6000: {'s9.eq_mid_neg': 300, 's18.lt0': 3000, 's38.eq_last': 100, 'u8 = 200': 6000, 'i16 = 200': 300, 'u8 < 10': 6000, 'i16 < 10': 300}
+RESULT SCHEMA p5 as decimal(7,1): all 8 combinations: values equal
+RESULT SCHEMA p5 as decimal(12,1): DIFFERS
+RESULT SCHEMA    flba/dict/vec=false: values equal
+RESULT SCHEMA    flba/dict/vec=true: values equal
+RESULT SCHEMA    flba/plain/vec=false: values equal
+RESULT SCHEMA    flba/plain/vec=true: values equal
+RESULT SCHEMA    int/dict/vec=false: values equal
+RESULT SCHEMA    int/dict/vec=true: error : org.apache.spark.SparkException: Job aborted due to stage failure: Task 0 in stage 820.0 failed 1 times, most recent failure: Lost task 0.0 in stage 820.0 (TID 820) (a8aeaeda240d executor driver): org.apache.spark.sql.execution.QueryExecutionException: Parquet column cannot be converted in file file:///work/flat_int_dict.parqu
+RESULT SCHEMA    int/plain/vec=false: values equal
+RESULT SCHEMA    int/plain/vec=true: error : org.apache.spark.SparkException: Job aborted due to stage failure: Task 0 in stage 822.0 failed 1 times, most recent failure: Lost task 0.0 in stage 822.0 (TID 822) (a8aeaeda240d executor driver): org.apache.spark.sql.execution.QueryExecutionException: Parquet column cannot be converted in file file:///work/flat_int_plain.parq
+RESULT SCHEMA p5 as decimal(25,1): DIFFERS
+RESULT SCHEMA    flba/dict/vec=false: values equal
+RESULT SCHEMA    flba/dict/vec=true: values equal
+RESULT SCHEMA    flba/plain/vec=false: values equal
+RESULT SCHEMA    flba/plain/vec=true: values equal
+RESULT SCHEMA    int/dict/vec=false: values equal
+RESULT SCHEMA    int/dict/vec=true: error : org.apache.spark.SparkException: Job aborted due to stage failure: Task 0 in stage 828.0 failed 1 times, most recent failure: Lost task 0.0 in stage 828.0 (TID 828) (a8aeaeda240d executor driver): org.apache.spark.sql.execution.QueryExecutionException: Parquet column cannot be converted in file file:///work/flat_int_dict.parqu
+RESULT SCHEMA    int/plain/vec=false: values equal
+RESULT SCHEMA    int/plain/vec=true: error : org.apache.spark.SparkException: Job aborted due to stage failure: Task 0 in stage 830.0 failed 1 times, most recent failure: Lost task 0.0 in stage 830.0 (TID 830) (a8aeaeda240d executor driver): org.apache.spark.sql.execution.QueryExecutionException: Parquet column cannot be converted in file file:///work/flat_int_plain.parq
+RESULT SCHEMA p5 as decimal(7,3): DIFFERS
+RESULT SCHEMA    flba/dict/vec=false: values equal
+RESULT SCHEMA    flba/dict/vec=true: error : org.apache.spark.SparkException: Job aborted due to stage failure: Task 0 in stage 832.0 failed 1 times, most recent failure: Lost task 0.0 in stage 832.0 (TID 832) (a8aeaeda240d executor driver): org.apache.spark.sql.execution.QueryExecutionException: Parquet column cannot be converted in file file:///work/flat_flba_dict.parq
+RESULT SCHEMA    flba/plain/vec=false: values equal
+RESULT SCHEMA    flba/plain/vec=true: error : org.apache.spark.SparkException: Job aborted due to stage failure: Task 0 in stage 834.0 failed 1 times, most recent failure: Lost task 0.0 in stage 834.0 (TID 834) (a8aeaeda240d executor driver): org.apache.spark.sql.execution.QueryExecutionException: Parquet column cannot be converted in file file:///work/flat_flba_plain.par
+RESULT SCHEMA    int/dict/vec=false: values equal
+RESULT SCHEMA    int/dict/vec=true: error : org.apache.spark.SparkException: Job aborted due to stage failure: Task 0 in stage 836.0 failed 1 times, most recent failure: Lost task 0.0 in stage 836.0 (TID 836) (a8aeaeda240d executor driver): org.apache.spark.sql.execution.QueryExecutionException: Parquet column cannot be converted in file file:///work/flat_int_dict.parqu
+RESULT SCHEMA    int/plain/vec=false: values equal
+RESULT SCHEMA    int/plain/vec=true: error : org.apache.spark.SparkException: Job aborted due to stage failure: Task 0 in stage 838.0 failed 1 times, most recent failure: Lost task 0.0 in stage 838.0 (TID 838) (a8aeaeda240d executor driver): org.apache.spark.sql.execution.QueryExecutionException: Parquet column cannot be converted in file file:///work/flat_int_plain.parq
+RESULT SCHEMA p9 as decimal(10,3): DIFFERS
+RESULT SCHEMA    flba/dict/vec=false: values equal
+RESULT SCHEMA    flba/dict/vec=true: values equal
+RESULT SCHEMA    flba/plain/vec=false: values equal
+RESULT SCHEMA    flba/plain/vec=true: values equal
+RESULT SCHEMA    int/dict/vec=false: values equal
+RESULT SCHEMA    int/dict/vec=true: error : org.apache.spark.SparkException: Job aborted due to stage failure: Task 0 in stage 844.0 failed 1 times, most recent failure: Lost task 0.0 in stage 844.0 (TID 844) (a8aeaeda240d executor driver): org.apache.spark.sql.execution.QueryExecutionException: Parquet column cannot be converted in file file:///work/flat_int_dict.parqu
+RESULT SCHEMA    int/plain/vec=false: values equal
+RESULT SCHEMA    int/plain/vec=true: error : org.apache.spark.SparkException: Job aborted due to stage failure: Task 0 in stage 846.0 failed 1 times, most recent failure: Lost task 0.0 in stage 846.0 (TID 846) (a8aeaeda240d executor driver): org.apache.spark.sql.execution.QueryExecutionException: Parquet column cannot be converted in file file:///work/flat_int_plain.parq
+RESULT SCHEMA p9 as decimal(18,3): DIFFERS
+RESULT SCHEMA    flba/dict/vec=false: values equal
+RESULT SCHEMA    flba/dict/vec=true: values equal
+RESULT SCHEMA    flba/plain/vec=false: values equal
+RESULT SCHEMA    flba/plain/vec=true: values equal
+RESULT SCHEMA    int/dict/vec=false: values equal
+RESULT SCHEMA    int/dict/vec=true: error : org.apache.spark.SparkException: Job aborted due to stage failure: Task 0 in stage 852.0 failed 1 times, most recent failure: Lost task 0.0 in stage 852.0 (TID 852) (a8aeaeda240d executor driver): org.apache.spark.sql.execution.QueryExecutionException: Parquet column cannot be converted in file file:///work/flat_int_dict.parqu
+RESULT SCHEMA    int/plain/vec=false: values equal
+RESULT SCHEMA    int/plain/vec=true: error : org.apache.spark.SparkException: Job aborted due to stage failure: Task 0 in stage 854.0 failed 1 times, most recent failure: Lost task 0.0 in stage 854.0 (TID 854) (a8aeaeda240d executor driver): org.apache.spark.sql.execution.QueryExecutionException: Parquet column cannot be converted in file file:///work/flat_int_plain.parq
+RESULT SCHEMA p9 as decimal(20,3): DIFFERS
+RESULT SCHEMA    flba/dict/vec=false: values equal
+RESULT SCHEMA    flba/dict/vec=true: values equal
+RESULT SCHEMA    flba/plain/vec=false: values equal
+RESULT SCHEMA    flba/plain/vec=true: values equal
+RESULT SCHEMA    int/dict/vec=false: values equal
+RESULT SCHEMA    int/dict/vec=true: error : org.apache.spark.SparkException: Job aborted due to stage failure: Task 0 in stage 860.0 failed 1 times, most recent failure: Lost task 0.0 in stage 860.0 (TID 860) (a8aeaeda240d executor driver): org.apache.spark.sql.execution.QueryExecutionException: Parquet column cannot be converted in file file:///work/flat_int_dict.parqu
+RESULT SCHEMA    int/plain/vec=false: values equal
+RESULT SCHEMA    int/plain/vec=true: error : org.apache.spark.SparkException: Job aborted due to stage failure: Task 0 in stage 862.0 failed 1 times, most recent failure: Lost task 0.0 in stage 862.0 (TID 862) (a8aeaeda240d executor driver): org.apache.spark.sql.execution.QueryExecutionException: Parquet column cannot be converted in file file:///work/flat_int_plain.parq
+RESULT SCHEMA p9 as decimal(38,3): DIFFERS
+RESULT SCHEMA    flba/dict/vec=false: values equal
+RESULT SCHEMA    flba/dict/vec=true: values equal
+RESULT SCHEMA    flba/plain/vec=false: values equal
+RESULT SCHEMA    flba/plain/vec=true: values equal
+RESULT SCHEMA    int/dict/vec=false: values equal
+RESULT SCHEMA    int/dict/vec=true: error : org.apache.spark.SparkException: Job aborted due to stage failure: Task 0 in stage 868.0 failed 1 times, most recent failure: Lost task 0.0 in stage 868.0 (TID 868) (a8aeaeda240d executor driver): org.apache.spark.sql.execution.QueryExecutionException: Parquet column cannot be converted in file file:///work/flat_int_dict.parqu
+RESULT SCHEMA    int/plain/vec=false: values equal
+RESULT SCHEMA    int/plain/vec=true: error : org.apache.spark.SparkException: Job aborted due to stage failure: Task 0 in stage 870.0 failed 1 times, most recent failure: Lost task 0.0 in stage 870.0 (TID 870) (a8aeaeda240d executor driver): org.apache.spark.sql.execution.QueryExecutionException: Parquet column cannot be converted in file file:///work/flat_int_plain.parq
+RESULT SCHEMA p12 as decimal(18,4): all 8 combinations: values equal
+RESULT SCHEMA p12 as decimal(20,4): DIFFERS
+RESULT SCHEMA    flba/dict/vec=false: values equal
+RESULT SCHEMA    flba/dict/vec=true: values equal
+RESULT SCHEMA    flba/plain/vec=false: values equal
+RESULT SCHEMA    flba/plain/vec=true: values equal
+RESULT SCHEMA    int/dict/vec=false: values equal
+RESULT SCHEMA    int/dict/vec=true: error : org.apache.spark.SparkException: Job aborted due to stage failure: Task 0 in stage 884.0 failed 1 times, most recent failure: Lost task 0.0 in stage 884.0 (TID 884) (a8aeaeda240d executor driver): org.apache.spark.sql.execution.QueryExecutionException: Parquet column cannot be converted in file file:///work/flat_int_dict.parqu
+RESULT SCHEMA    int/plain/vec=false: values equal
+RESULT SCHEMA    int/plain/vec=true: error : org.apache.spark.SparkException: Job aborted due to stage failure: Task 0 in stage 886.0 failed 1 times, most recent failure: Lost task 0.0 in stage 886.0 (TID 886) (a8aeaeda240d executor driver): org.apache.spark.sql.execution.QueryExecutionException: Parquet column cannot be converted in file file:///work/flat_int_plain.parq
+RESULT SCHEMA p18 as decimal(20,6): DIFFERS
+RESULT SCHEMA    flba/dict/vec=false: values equal
+RESULT SCHEMA    flba/dict/vec=true: values equal
+RESULT SCHEMA    flba/plain/vec=false: values equal
+RESULT SCHEMA    flba/plain/vec=true: values equal
+RESULT SCHEMA    int/dict/vec=false: values equal
+RESULT SCHEMA    int/dict/vec=true: error : org.apache.spark.SparkException: Job aborted due to stage failure: Task 0 in stage 892.0 failed 1 times, most recent failure: Lost task 0.0 in stage 892.0 (TID 892) (a8aeaeda240d executor driver): org.apache.spark.sql.execution.QueryExecutionException: Parquet column cannot be converted in file file:///work/flat_int_dict.parqu
+RESULT SCHEMA    int/plain/vec=false: values equal
+RESULT SCHEMA    int/plain/vec=true: error : org.apache.spark.SparkException: Job aborted due to stage failure: Task 0 in stage 894.0 failed 1 times, most recent failure: Lost task 0.0 in stage 894.0 (TID 894) (a8aeaeda240d executor driver): org.apache.spark.sql.execution.QueryExecutionException: Parquet column cannot be converted in file file:///work/flat_int_plain.parq
+RESULT SCHEMA p18 as decimal(38,6): DIFFERS
+RESULT SCHEMA    flba/dict/vec=false: values equal
+RESULT SCHEMA    flba/dict/vec=true: values equal
+RESULT SCHEMA    flba/plain/vec=false: values equal
+RESULT SCHEMA    flba/plain/vec=true: values equal
+RESULT SCHEMA    int/dict/vec=false: values equal
+RESULT SCHEMA    int/dict/vec=true: error : org.apache.spark.SparkException: Job aborted due to stage failure: Task 0 in stage 900.0 failed 1 times, most recent failure: Lost task 0.0 in stage 900.0 (TID 900) (a8aeaeda240d executor driver): org.apache.spark.sql.execution.QueryExecutionException: Parquet column cannot be converted in file file:///work/flat_int_dict.parqu
+RESULT SCHEMA    int/plain/vec=false: values equal
+RESULT SCHEMA    int/plain/vec=true: error : org.apache.spark.SparkException: Job aborted due to stage failure: Task 0 in stage 902.0 failed 1 times, most recent failure: Lost task 0.0 in stage 902.0 (TID 902) (a8aeaeda240d executor driver): org.apache.spark.sql.execution.QueryExecutionException: Parquet column cannot be converted in file file:///work/flat_int_plain.parq
+RESULT SCHEMA p18 as decimal(20,8): DIFFERS
+RESULT SCHEMA    flba/dict/vec=false: values equal
+RESULT SCHEMA    flba/dict/vec=true: error : org.apache.spark.SparkException: Job aborted due to stage failure: Task 0 in stage 904.0 failed 1 times, most recent failure: Lost task 0.0 in stage 904.0 (TID 904) (a8aeaeda240d executor driver): org.apache.spark.sql.execution.QueryExecutionException: Parquet column cannot be converted in file file:///work/flat_flba_dict.parq
+RESULT SCHEMA    flba/plain/vec=false: values equal
+RESULT SCHEMA    flba/plain/vec=true: error : org.apache.spark.SparkException: Job aborted due to stage failure: Task 0 in stage 906.0 failed 1 times, most recent failure: Lost task 0.0 in stage 906.0 (TID 906) (a8aeaeda240d executor driver): org.apache.spark.sql.execution.QueryExecutionException: Parquet column cannot be converted in file file:///work/flat_flba_plain.par
+RESULT SCHEMA    int/dict/vec=false: values equal
+RESULT SCHEMA    int/dict/vec=true: error : org.apache.spark.SparkException: Job aborted due to stage failure: Task 0 in stage 908.0 failed 1 times, most recent failure: Lost task 0.0 in stage 908.0 (TID 908) (a8aeaeda240d executor driver): org.apache.spark.sql.execution.QueryExecutionException: Parquet column cannot be converted in file file:///work/flat_int_dict.parqu
+RESULT SCHEMA    int/plain/vec=false: values equal
+RESULT SCHEMA    int/plain/vec=true: error : org.apache.spark.SparkException: Job aborted due to stage failure: Task 0 in stage 910.0 failed 1 times, most recent failure: Lost task 0.0 in stage 910.0 (TID 910) (a8aeaeda240d executor driver): org.apache.spark.sql.execution.QueryExecutionException: Parquet column cannot be converted in file file:///work/flat_int_plain.parq
+RESULT SCHEMA p20 as decimal(38,6): all 8 combinations: values equal
+RESULT SCHEMA p9 as decimal(5,3): DIFFERS
+RESULT SCHEMA    flba/dict/vec=false: WRONG: 2177 of 6000 equal, 3823 became null
+RESULT SCHEMA    flba/dict/vec=true: error : org.apache.spark.SparkException: Job aborted due to stage failure: Task 0 in stage 920.0 failed 1 times, most recent failure: Lost task 0.0 in stage 920.0 (TID 920) (a8aeaeda240d executor driver): org.apache.spark.sql.execution.QueryExecutionException: Parquet column cannot be converted in file file:///work/flat_flba_dict.parq
+RESULT SCHEMA    flba/plain/vec=false: WRONG: 2177 of 6000 equal, 3823 became null
+RESULT SCHEMA    flba/plain/vec=true: error : org.apache.spark.SparkException: Job aborted due to stage failure: Task 0 in stage 922.0 failed 1 times, most recent failure: Lost task 0.0 in stage 922.0 (TID 922) (a8aeaeda240d executor driver): org.apache.spark.sql.execution.QueryExecutionException: Parquet column cannot be converted in file file:///work/flat_flba_plain.par
+RESULT SCHEMA    int/dict/vec=false: WRONG: 2177 of 6000 equal, 3823 became null
+RESULT SCHEMA    int/dict/vec=true: error : org.apache.spark.SparkException: Job aborted due to stage failure: Task 0 in stage 924.0 failed 1 times, most recent failure: Lost task 0.0 in stage 924.0 (TID 924) (a8aeaeda240d executor driver): org.apache.spark.sql.execution.QueryExecutionException: Parquet column cannot be converted in file file:///work/flat_int_dict.parqu
+RESULT SCHEMA    int/plain/vec=false: WRONG: 2177 of 6000 equal, 3823 became null
+RESULT SCHEMA    int/plain/vec=true: error : org.apache.spark.SparkException: Job aborted due to stage failure: Task 0 in stage 926.0 failed 1 times, most recent failure: Lost task 0.0 in stage 926.0 (TID 926) (a8aeaeda240d executor driver): org.apache.spark.sql.execution.QueryExecutionException: Parquet column cannot be converted in file file:///work/flat_int_plain.parq
+RESULT SCHEMA p20 as decimal(18,6): DIFFERS
+RESULT SCHEMA    flba/dict/vec=false: WRONG: 3096 of 6000 equal, 2904 became null
+RESULT SCHEMA    flba/dict/vec=true: error : org.apache.spark.SparkException: Job aborted due to stage failure: Task 0 in stage 928.0 failed 1 times, most recent failure: Lost task 0.0 in stage 928.0 (TID 928) (a8aeaeda240d executor driver): org.apache.spark.sql.execution.QueryExecutionException: Parquet column cannot be converted in file file:///work/flat_flba_dict.parq
+RESULT SCHEMA    flba/plain/vec=false: WRONG: 3096 of 6000 equal, 2904 became null
+RESULT SCHEMA    flba/plain/vec=true: error : org.apache.spark.SparkException: Job aborted due to stage failure: Task 0 in stage 930.0 failed 1 times, most recent failure: Lost task 0.0 in stage 930.0 (TID 930) (a8aeaeda240d executor driver): org.apache.spark.sql.execution.QueryExecutionException: Parquet column cannot be converted in file file:///work/flat_flba_plain.par
+RESULT SCHEMA    int/dict/vec=false: WRONG: 3096 of 6000 equal, 2904 became null
+RESULT SCHEMA    int/dict/vec=true: error : org.apache.spark.SparkException: Job aborted due to stage failure: Task 0 in stage 932.0 failed 1 times, most recent failure: Lost task 0.0 in stage 932.0 (TID 932) (a8aeaeda240d executor driver): org.apache.spark.sql.execution.QueryExecutionException: Parquet column cannot be converted in file file:///work/flat_int_dict.parqu
+RESULT SCHEMA    int/plain/vec=false: WRONG: 3096 of 6000 equal, 2904 became null
+RESULT SCHEMA    int/plain/vec=true: error : org.apache.spark.SparkException: Job aborted due to stage failure: Task 0 in stage 934.0 failed 1 times, most recent failure: Lost task 0.0 in stage 934.0 (TID 934) (a8aeaeda240d executor driver): org.apache.spark.sql.execution.QueryExecutionException: Parquet column cannot be converted in file file:///work/flat_int_plain.parq
+RESULT SCHEMA u8 as tinyint: all 8 combinations: WRONG: 3323 of 6000 equal, 0 became null
+RESULT SCHEMA u8 as int: all 8 combinations: values equal
+RESULT SCHEMA u8 as bigint: DIFFERS
+RESULT SCHEMA    flba/dict/vec=false: error Caused by: org.apache.parquet.io.ParquetDecodingException: Can not read value at 1 in block 0 in file <file> | Caused by: java.lang.ClassCastException: class org.apache.spark.sql.catalyst.expressions.MutableLong cannot be cast to class org.apache.spark.sql.catalyst.expressions.MutableInt (org.apache.spark.sql.catalyst.expression
+RESULT SCHEMA    flba/dict/vec=true: error : org.apache.spark.SparkException: Job aborted due to stage failure: Task 0 in stage 952.0 failed 1 times, most recent failure: Lost task 0.0 in stage 952.0 (TID 952) (a8aeaeda240d executor driver): org.apache.spark.sql.execution.QueryExecutionException: Parquet column cannot be converted in file file:///work/flat_flba_dict.parq
+RESULT SCHEMA    flba/plain/vec=false: error Caused by: org.apache.parquet.io.ParquetDecodingException: Can not read value at 1 in block 0 in file <file> | Caused by: java.lang.ClassCastException: class org.apache.spark.sql.catalyst.expressions.MutableLong cannot be cast to class org.apache.spark.sql.catalyst.expressions.MutableInt (org.apache.spark.sql.catalyst.expression
+RESULT SCHEMA    flba/plain/vec=true: error : org.apache.spark.SparkException: Job aborted due to stage failure: Task 0 in stage 954.0 failed 1 times, most recent failure: Lost task 0.0 in stage 954.0 (TID 954) (a8aeaeda240d executor driver): org.apache.spark.sql.execution.QueryExecutionException: Parquet column cannot be converted in file file:///work/flat_flba_plain.par
+RESULT SCHEMA    int/dict/vec=false: error Caused by: org.apache.parquet.io.ParquetDecodingException: Can not read value at 1 in block 0 in file <file> | Caused by: java.lang.ClassCastException: class org.apache.spark.sql.catalyst.expressions.MutableLong cannot be cast to class org.apache.spark.sql.catalyst.expressions.MutableInt (org.apache.spark.sql.catalyst.expression
+RESULT SCHEMA    int/dict/vec=true: error : org.apache.spark.SparkException: Job aborted due to stage failure: Task 0 in stage 956.0 failed 1 times, most recent failure: Lost task 0.0 in stage 956.0 (TID 956) (a8aeaeda240d executor driver): org.apache.spark.sql.execution.QueryExecutionException: Parquet column cannot be converted in file file:///work/flat_int_dict.parqu
+RESULT SCHEMA    int/plain/vec=false: error Caused by: org.apache.parquet.io.ParquetDecodingException: Can not read value at 1 in block 0 in file <file> | Caused by: java.lang.ClassCastException: class org.apache.spark.sql.catalyst.expressions.MutableLong cannot be cast to class org.apache.spark.sql.catalyst.expressions.MutableInt (org.apache.spark.sql.catalyst.expression
+RESULT SCHEMA    int/plain/vec=true: error : org.apache.spark.SparkException: Job aborted due to stage failure: Task 0 in stage 958.0 failed 1 times, most recent failure: Lost task 0.0 in stage 958.0 (TID 958) (a8aeaeda240d executor driver): org.apache.spark.sql.execution.QueryExecutionException: Parquet column cannot be converted in file file:///work/flat_int_plain.parq
+RESULT INTSCHEMA u8 (values 0 to 255) as tinyint: all 4 combinations: WRONG: 3000 of 6000 equal
+RESULT INTSCHEMA i16 (values 0 to 255) as tinyint: all 4 combinations: WRONG: 3000 of 6000 equal
+RESULT INTSCHEMA u8 (values 0 to 255) as smallint: all 4 combinations: values equal
+RESULT INTSCHEMA i16 (values 0 to 255) as smallint: all 4 combinations: values equal
+RESULT INTSCHEMA u8 (values 0 to 255) as int: all 4 combinations: values equal
+RESULT INTSCHEMA i16 (values 0 to 255) as int: all 4 combinations: values equal
+RESULT INTSCHEMA u8 (values 0 to 255) as bigint: dict/vec=false: error Caused by: org.apache.parquet.io.ParquetDecodingException: Can not read value at 1 in block 0 in file <file> | Caused by: java.lang.ClassCastException
+RESULT INTSCHEMA u8 (values 0 to 255) as bigint: dict/vec=true: error : org.apache.spark.SparkException: Job aborted due to stage failure: Task 0 in stage 984.0 failed 1 times, most recent failure: Lost task 0.0 in stage 984.0 (TID 984) (a8aeaeda240d executor driver): org.apache.spark.sql.execution.QueryExecutionException: Parquet column cannot be converted in file file:///work/sorted_flba_dict.pa
+RESULT INTSCHEMA u8 (values 0 to 255) as bigint: plain/vec=false: error Caused by: org.apache.parquet.io.ParquetDecodingException: Can not read value at 1 in block 0 in file <file> | Caused by: java.lang.ClassCastException
+RESULT INTSCHEMA u8 (values 0 to 255) as bigint: plain/vec=true: error : org.apache.spark.SparkException: Job aborted due to stage failure: Task 0 in stage 986.0 failed 1 times, most recent failure: Lost task 0.0 in stage 986.0 (TID 986) (a8aeaeda240d executor driver): org.apache.spark.sql.execution.QueryExecutionException: Parquet column cannot be converted in file file:///work/sorted_flba_plain.p
+RESULT INTSCHEMA i16 (values 0 to 255) as bigint: dict/vec=false: error Caused by: org.apache.parquet.io.ParquetDecodingException: Can not read value at 1 in block 0 in file <file> | Caused by: java.lang.ClassCastException
+RESULT INTSCHEMA i16 (values 0 to 255) as bigint: dict/vec=true: error : org.apache.spark.SparkException: Job aborted due to stage failure: Task 0 in stage 988.0 failed 1 times, most recent failure: Lost task 0.0 in stage 988.0 (TID 988) (a8aeaeda240d executor driver): org.apache.spark.sql.execution.QueryExecutionException: Parquet column cannot be converted in file file:///work/sorted_flba_dict.pa
+RESULT INTSCHEMA i16 (values 0 to 255) as bigint: plain/vec=false: error Caused by: org.apache.parquet.io.ParquetDecodingException: Can not read value at 1 in block 0 in file <file> | Caused by: java.lang.ClassCastException
+RESULT INTSCHEMA i16 (values 0 to 255) as bigint: plain/vec=true: error : org.apache.spark.SparkException: Job aborted due to stage failure: Task 0 in stage 990.0 failed 1 times, most recent failure: Lost task 0.0 in stage 990.0 (TID 990) (a8aeaeda240d executor driver): org.apache.spark.sql.execution.QueryExecutionException: Parquet column cannot be converted in file file:///work/sorted_flba_plain.p
+RESULT INTSCHEMA u8 (values 0 to 255) as decimal(3,0): dict/vec=false: values equal
+RESULT INTSCHEMA u8 (values 0 to 255) as decimal(3,0): dict/vec=true: error : org.apache.spark.SparkException: Job aborted due to stage failure: Task 0 in stage 992.0 failed 1 times, most recent failure: Lost task 0.0 in stage 992.0 (TID 992) (a8aeaeda240d executor driver): org.apache.spark.sql.execution.QueryExecutionException: Parquet column cannot be converted in file file:///work/sorted_flba_dict.pa
+RESULT INTSCHEMA u8 (values 0 to 255) as decimal(3,0): plain/vec=false: values equal
+RESULT INTSCHEMA u8 (values 0 to 255) as decimal(3,0): plain/vec=true: error : org.apache.spark.SparkException: Job aborted due to stage failure: Task 0 in stage 994.0 failed 1 times, most recent failure: Lost task 0.0 in stage 994.0 (TID 994) (a8aeaeda240d executor driver): org.apache.spark.sql.execution.QueryExecutionException: Parquet column cannot be converted in file file:///work/sorted_flba_plain.p
+RESULT INTSCHEMA i16 (values 0 to 255) as decimal(3,0): dict/vec=false: values equal
+RESULT INTSCHEMA i16 (values 0 to 255) as decimal(3,0): dict/vec=true: error : org.apache.spark.SparkException: Job aborted due to stage failure: Task 0 in stage 996.0 failed 1 times, most recent failure: Lost task 0.0 in stage 996.0 (TID 996) (a8aeaeda240d executor driver): org.apache.spark.sql.execution.QueryExecutionException: Parquet column cannot be converted in file file:///work/sorted_flba_dict.pa
+RESULT INTSCHEMA i16 (values 0 to 255) as decimal(3,0): plain/vec=false: values equal
+RESULT INTSCHEMA i16 (values 0 to 255) as decimal(3,0): plain/vec=true: error : org.apache.spark.SparkException: Job aborted due to stage failure: Task 0 in stage 998.0 failed 1 times, most recent failure: Lost task 0.0 in stage 998.0 (TID 998) (a8aeaeda240d executor driver): org.apache.spark.sql.execution.QueryExecutionException: Parquet column cannot be converted in file file:///work/sorted_flba_plain.p
+RESULT failures: 0
