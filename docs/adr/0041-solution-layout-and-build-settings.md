@@ -74,10 +74,10 @@ were not on the list.
 - A milestone that adds a project also adds it to the solution and writes its
   settings. The repository layout in the architecture overview shows which
   projects exist.
-- Each of these checks was tried by breaking it: a public class without a
-  doc comment, an unused variable, a call that needs reflection, and a
-  reference of each kind that `RejectDependencies` rejects. Each failed the
-  build.
+- Each build check was tried by breaking it. A public class without a doc
+  comment, a call that needs reflection, and a reference of each kind that
+  `RejectDependencies` rejects each failed the build. So did an unused
+  variable, which shows that a warning is treated as an error.
 - The analyzers report code that is known to fail under Native AOT or
   trimming. They do not prove that the library works there. The Native AOT
   test application, planned for the "Source generator" milestone, publishes

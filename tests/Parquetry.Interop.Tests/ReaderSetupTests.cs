@@ -43,7 +43,34 @@ public class ReaderSetupTests(ReaderContainers readers)
         var result = await readers.ReadAsync(reader, truncated, cancellationToken);
 
         Assert.Null(result.Table);
-        Assert.False(string.IsNullOrWhiteSpace(result.Error));
+
+        // The error has to be about the file. Every reader's message for a
+        // file without its footer mentions the footer, the magic bytes at
+        // the end of a Parquet file, or their value, PAR1. An error from the
+        // reader's library about something else, such as a missing module,
+        // would not.
+        Assert.Matches("(?i)footer|magic|PAR1", result.Error);
+    }
+
+    /// <summary>
+    /// A column of a type the setup has no common name for comes back
+    /// marked as unknown, with a value, and not as an error. The file has a
+    /// date column and a column of timestamps with a time zone.
+    /// </summary>
+    [Theory]
+    [MemberData(nameof(ReaderNames.All), MemberType = typeof(ReaderNames))]
+    public async Task Reader_returns_an_unknown_type_as_unknown(string reader)
+    {
+        var cancellationToken = TestContext.Current.CancellationToken;
+        var file = await readers.GetFileAsync("unknown-types.parquet", cancellationToken);
+
+        var result = await readers.ReadAsync(reader, file, cancellationToken);
+
+        Assert.NotNull(result.Table);
+        Assert.Equal(["day", "at"], result.Table.Columns.Select(column => column.Name));
+        Assert.All(result.Table.Columns, column => Assert.Equal(ColumnKind.Unknown, column.Kind));
+        var row = Assert.Single(result.Table.Rows);
+        Assert.All(row, value => Assert.False(string.IsNullOrWhiteSpace(value as string)));
     }
 
     /// <summary>

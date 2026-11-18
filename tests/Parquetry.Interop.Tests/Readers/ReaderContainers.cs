@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Globalization;
 using System.Net;
 using System.Net.Http.Headers;
@@ -50,10 +51,10 @@ public sealed class ReaderContainers : IAsyncLifetime
     private static readonly TimeSpan RequestTimeout = TimeSpan.FromSeconds(60);
 
     /// <summary>
-    /// The most text taken from the end of a container's output for an
-    /// error message.
+    /// The most text taken from the end of each of a container's two output
+    /// streams for an error message.
     /// </summary>
-    private const int MaxOutputLength = 4000;
+    private const int MaxOutputLength = 2000;
 
     private static readonly string ContainersDirectory = Path.Combine(AppContext.BaseDirectory, "Containers");
 
@@ -62,6 +63,11 @@ public sealed class ReaderContainers : IAsyncLifetime
     private readonly HttpClient _http = new() { Timeout = Timeout.InfiniteTimeSpan };
     private readonly List<IContainer> _containers = [];
     private readonly Dictionary<string, (IContainer Container, Uri Url)> _readers = [];
+
+    // Containers that did not answer a request in time. No more requests are
+    // sent to them, so that the tests after a hung read fail at once and do
+    // not each wait out the time limit.
+    private readonly ConcurrentDictionary<IContainer, bool> _unresponsive = new();
     private IContainer? _pythonContainer;
     private Uri? _pythonBaseUrl;
 
@@ -183,12 +189,19 @@ public sealed class ReaderContainers : IAsyncLifetime
     /// not answer, or does not answer in time, is reported as an error of
     /// the test setup that names the container and includes its output.
     /// </summary>
-    private static async Task<HttpResponseMessage> SendAsync(
+    private async Task<HttpResponseMessage> SendAsync(
         string description,
         IContainer container,
         Func<CancellationToken, Task<HttpResponseMessage>> send,
         CancellationToken cancellationToken)
     {
+        if (_unresponsive.ContainsKey(container))
+        {
+            throw new InvalidOperationException(
+                $"No request was sent to {description}, because it did not answer an earlier request within " +
+                $"{RequestTimeout.TotalSeconds} seconds. The test that made that request has the details.");
+        }
+
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         timeout.CancelAfter(RequestTimeout);
         try
@@ -201,15 +214,16 @@ public sealed class ReaderContainers : IAsyncLifetime
             // it. The request in progress ends without an answer, and later
             // requests cannot connect.
             throw new InvalidOperationException(
-                $"No answer from {description}. A reader in it may have crashed, on this file or on one sent earlier. " +
+                $"No answer from {description}. A reader in it may have crashed, on this request or on an earlier one. " +
                 $"The end of the container's output: {await OutputOf(container)}",
                 error);
         }
         catch (OperationCanceledException error) when (!cancellationToken.IsCancellationRequested)
         {
+            _unresponsive[container] = true;
             throw new InvalidOperationException(
                 $"No answer from {description} within {RequestTimeout.TotalSeconds} seconds. A reader in it may be " +
-                $"hanging, on this file or on one sent earlier. The end of the container's output: {await OutputOf(container)}",
+                $"hanging, on this request or on an earlier one. The end of the container's output: {await OutputOf(container)}",
                 error);
         }
     }
@@ -270,27 +284,32 @@ public sealed class ReaderContainers : IAsyncLifetime
     }
 
     /// <summary>
-    /// Returns the end of what a container has written to its output, for
-    /// an error message. If the output cannot be read, says so and does not
-    /// throw.
+    /// Returns the end of what a container has written to each of its
+    /// output streams, for an error message. If the output cannot be read,
+    /// says so and does not throw.
     /// </summary>
     private static async Task<string> OutputOf(IContainer container)
     {
         try
         {
             var (stdout, stderr) = await container.GetLogsAsync();
-            var output = (stdout + stderr).Trim();
-            if (output.Length > MaxOutputLength)
-            {
-                output = output[^MaxOutputLength..];
-            }
-
-            return output.Length == 0 ? "(none)" : output;
+            return $"standard output: {EndOf(stdout)} standard error: {EndOf(stderr)}";
         }
         catch (Exception error)
         {
             return $"(could not be read: {error.Message})";
         }
+    }
+
+    private static string EndOf(string output)
+    {
+        output = output.Trim();
+        if (output.Length == 0)
+        {
+            return "(none)";
+        }
+
+        return output.Length > MaxOutputLength ? output[^MaxOutputLength..] : output;
     }
 
     /// <summary>

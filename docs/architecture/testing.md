@@ -69,11 +69,12 @@ whether the column can hold nulls. The other readers do not report that, so
 only pyarrow checks that a column the library writes as required is marked
 required in the file.
 
-`ReaderSetupTests.cs` checks the setup itself with a small file that pyarrow
+`ReaderSetupTests.cs` checks the setup itself with small files that pyarrow
 writes in the Python container. Every reader must return the values that
-were written, every reader must report an error when the file is cut short,
-and a fault in the server must not be reported as a reader's error. Every
-other reader test relies on these.
+were written, and must report an error about the file when the file is cut
+short. A column of a type the setup does not know must come back marked as
+unknown. A fault in the server must not be reported as a reader's error.
+Every other reader test relies on these.
 
 The reasons for this design are in the decision record
 [reader tests send files to reader containers that stay running](../adr/0039-reader-containers-that-stay-running.md).
@@ -86,15 +87,16 @@ The reasons for this design are in the decision record
   the image. A test that expects a reader to reject a file should also check
   that the message is about the file.
 - pyarrow, Polars, and DuckDB run in one process. A reader that crashes in
-  native code stops that process. The test that sent the file fails with "No
-  answer from the container", and so does every later test that uses the
-  Python container, including the ones that only fetch the known-good file
-  from it. Polars 2.1.0 was seen to crash this way on a file with one damaged
-  byte.
+  native code stops that process. The test that sent the file fails with a
+  message that starts "No answer from", and so does every later test that
+  uses the Python container, including the ones that only fetch the
+  known-good file from it. Polars 2.1.0 was seen to crash this way on a file
+  with one damaged byte.
 - Each Spark container reads one file at a time. A read that hangs holds up
   the reads after it. A request with no answer after 60 seconds fails with a
-  message that says a reader may be hanging on this file or an earlier one.
-  Spark 3.5.9 was seen to hang this way on a file with one damaged byte.
+  message that says a reader may be hanging, and the later tests for that
+  container fail at once without sending a request. Spark 3.5.9 was seen to
+  hang this way on a file with one damaged byte.
 - The tests must run on the machine that runs Docker, because each
   container's port is published only on that machine's loopback address.
 

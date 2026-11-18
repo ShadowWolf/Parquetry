@@ -18,7 +18,9 @@
          Microsoft.AspNetCore.App, which contains Microsoft.Extensions.
        - A reference to an assembly file. The SDK adds the assemblies of the
          base library as references of this kind during the build and marks
-         each with the framework it belongs to. Those are let through.
+         each with the framework it belongs to. Those are let through. A
+         reference written in this file with that mark copied onto it would
+         be let through as well.
        - A reference to another project whose assembly this one would use. A
          project that only supplies an analyzer or source generator sets
          ReferenceOutputAssembly to false and is let through.

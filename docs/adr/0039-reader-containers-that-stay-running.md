@@ -80,11 +80,12 @@ were not put to the project owner as separate questions.
 - A container that does not answer its health check within three minutes
   fails the test run, and a request that gets no answer within 60 seconds
   fails its test. Both messages include the end of the container's output.
+  After such a request, no more requests are sent to that container.
 
 ## Consequences
 
 - A reader test is an ordinary xUnit test that runs once for each reader. On
-  an Arm64 Mac with the images already built, the eleven tests of the setup
+  an Arm64 Mac with the images already built, the sixteen tests of the setup
   take about 10 seconds.
 - Reader tests need Docker. A contributor without it can still build
   everything and run the unit tests.
@@ -109,15 +110,16 @@ were not put to the project owner as separate questions.
   native code, the server stops. The test that sent the file and every later
   test that uses the Python container fail with an error that says the
   container gave no answer. That includes the tests for the Spark readers
-  that fetch the known-good file from it. The review of this change made
-  Polars 2.1.0 crash this way with a file that had one damaged byte.
-  Running each reader in its own process would contain a crash. That was not
-  done here.
+  that fetch the known-good file from it. While the setup was being built,
+  a file with one damaged byte made Polars 2.1.0 crash this way. Running
+  each reader in its own process would contain a crash. That was not done
+  here.
 - With one worker thread, a Spark container reads one file at a time, and a
-  read that hangs holds up the reads after it until each gives up after 60
-  seconds. The review made Spark 3.5.9 hang this way with a file that had
-  one damaged byte. Two worker threads would let one more read through, at
-  the cost of the single task that the row order relies on.
+  read that hangs holds up the reads after it. The request that hung fails
+  after 60 seconds, and the later tests for that container fail at once.
+  While the setup was being built, a file with one damaged byte made Spark
+  3.5.9 hang this way. Two worker threads would let one more read through,
+  at the cost of the single task that the row order relies on.
 - The tests have to run on the machine that runs Docker. With Docker on
   another machine, or with the tests inside a container that uses the host's
   Docker, the published port cannot be reached and the containers fail to

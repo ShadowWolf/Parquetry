@@ -3,6 +3,7 @@
 Each of the three has its own Parquet reader. Polars is called without its
 option to read through pyarrow.
 """
+import datetime
 import io
 
 import duckdb
@@ -120,6 +121,23 @@ def known_good_file():
     return sink.getvalue()
 
 
+def unknown_types_file():
+    """A file with two column types the setup has no common name for: a date
+    and a timestamp with a time zone. A test uses it to confirm that every
+    reader returns such columns marked as unknown, and not as an error."""
+    table = pyarrow.table(
+        {
+            "day": pyarrow.array([datetime.date(2026, 1, 2)], pyarrow.date32()),
+            "at": pyarrow.array(
+                [datetime.datetime(2026, 1, 2, 3, 4, 5)], pyarrow.timestamp("us", tz="UTC")
+            ),
+        }
+    )
+    sink = io.BytesIO()
+    pyarrow.parquet.write_table(table, sink)
+    return sink.getvalue()
+
+
 if __name__ == "__main__":
     serve(
         readers={
@@ -133,5 +151,8 @@ if __name__ == "__main__":
             "polars": polars.__version__,
             "duckdb": duckdb.__version__,
         },
-        files={"known-good.parquet": known_good_file},
+        files={
+            "known-good.parquet": known_good_file,
+            "unknown-types.parquet": unknown_types_file,
+        },
     )
