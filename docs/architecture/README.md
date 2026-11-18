@@ -5,7 +5,8 @@ of the library and how data moves through them. Each part has its own page,
 linked below. The reasons for the design are in the
 [decision records](../adr/README.md).
 
-No library code exists yet. These pages describe the intended design, and code
+The solution, the build settings, and the test setup exist. The library
+itself has no code yet. These pages describe the intended design, and code
 sketches in them show the shape of an interface and not its final form.
 
 If Parquet's terms are new to you, read
@@ -80,11 +81,18 @@ methods are described in [Public API](public-api.md).
 
 ```
 AGENTS.md  CLAUDE.md  LICENSE  README.md
-.github/                           pull request and issue templates, workflows
+Parquetry.slnx                     the solution
+global.json                        the .NET SDK version and the test runner
+Directory.Build.props              build settings shared by every project
+Directory.Packages.props           the version of every package
+.editorconfig  .gitattributes      formatting rules and line endings
+.github/                           templates, the CI workflow, Dependabot settings,
+                                   and the link check script
 .claude/                           Claude Code settings and the committing skill
 docs/adr/                          decision records
 docs/architecture/                 these pages
 docs/research/                     programs used to check how other libraries behave
+src/Directory.Build.props          build settings shared by the published packages
 src/Parquetry/
   Schema/  Shredding/  Encoding/  Compression/  Format/
   Layout/  IO/  Memory/  Options/  Encryption/  Diagnostics/
@@ -101,7 +109,11 @@ tests/Parquetry.Cloud.Tests/       storage emulators and live services
 benchmarks/Parquetry.Benchmarks/
 ```
 
-This is the planned layout. Only the documentation files exist so far.
+This is the planned layout. Of the projects, `src/Parquetry`,
+`tests/Parquetry.Tests`, and `tests/Parquetry.Interop.Tests` exist, and
+`src/Parquetry` has no folders or code yet. Each other project is added by
+the milestone that first puts code in it. The files outside `src`, `tests`,
+and `benchmarks` all exist.
 
 ## Open questions
 

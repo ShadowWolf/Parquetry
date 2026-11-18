@@ -1,0 +1,13 @@
+<Project>
+
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+
+  <!-- Settings for the projects that are published as packages. -->
+  <PropertyGroup>
+    <!-- Produces the XML documentation file. With warnings treated as errors,
+         a public type or member without a doc comment fails the build
+         (CS1591). -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+</Project>

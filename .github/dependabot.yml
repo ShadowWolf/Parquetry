@@ -1,0 +1,35 @@
+# Dependabot opens a pull request when a dependency has a new version. Each
+# of those pull requests follows the rules in AGENTS.md like any other.
+version: 2
+updates:
+  # NuGet packages. The versions are in Directory.Packages.props.
+  - package-ecosystem: nuget
+    directory: /
+    schedule:
+      interval: weekly
+
+  # The actions used in .github/workflows.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+
+  # The base images of the reader containers.
+  - package-ecosystem: docker
+    directory: /tests/Parquetry.Interop.Tests/Containers
+    schedule:
+      interval: weekly
+    ignore:
+      # One container stays on Spark 3.5 and the other on Spark 4, so an
+      # update to the next major version is not wanted for either.
+      - dependency-name: apache/spark
+        update-types:
+          - version-update:semver-major
+
+  # pyarrow, Polars, and DuckDB in the reader container. pyarrow is also the
+  # reference for what the library writes, so a new pyarrow version can
+  # change what the comparisons in docs/architecture/pyarrow-parity.md show.
+  - package-ecosystem: pip
+    directory: /tests/Parquetry.Interop.Tests/Containers
+    schedule:
+      interval: weekly

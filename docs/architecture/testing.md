@@ -16,6 +16,9 @@ that its files are correct.
 | Storage tests | The S3 and Azure destinations against emulators, and against live services when credentials are supplied. | `Parquetry.Cloud.Tests` |
 | Benchmarks | Throughput and allocation, compared with `Parquet.Net` and `ParquetSharp`. | `Parquetry.Benchmarks` |
 
+`Parquetry.Tests` and `Parquetry.Interop.Tests` exist. Each other project is
+added by the milestone that first needs it.
+
 ## Reader tests
 
 Every feature that changes what goes into a file has reader tests. A test
@@ -36,15 +39,70 @@ either from the reader's own metrics or by writing a deliberately wrong filter
 or index and confirming that rows go missing. Which readers use each structure
 by default has not been checked yet.
 
+### How a test reaches a reader
+
+The readers run in three containers: one for pyarrow, Polars, and DuckDB, one
+for Spark 3.5, and one for the current Spark 4.x. The containers start once
+for the whole test run and are stopped when it ends. Each runs a small HTTP
+server. A test sends a file's bytes to a reader and gets back the columns and
+rows the reader saw, and the test compares them with what it wrote. A test
+that takes a reader's name runs once for each of the five readers.
+
+| Part | Where it is |
+|---|---|
+| The Dockerfiles, the server, and the Python code that calls each reader | `tests/Parquetry.Interop.Tests/Containers` |
+| The requests the server accepts and the form of its answers | The comment at the top of `reader_server.py` in that folder |
+| The C# code that starts the containers and sends files | `tests/Parquetry.Interop.Tests/Readers` |
+| The versions of pyarrow, Polars, and DuckDB | `requirements.txt` in the containers folder |
+| The versions of Spark and Python | The first line of each Dockerfile |
+
+A reader's answer is one of two things: a table, or the reader's error
+message when it could not read the file. If the server itself fails, the test
+fails with an error from the test setup, so a test that expects a reader to
+reject a file cannot pass because the setup broke.
+
+The server knows a column's type by a name that is the same for every
+reader, such as `int64`. The list of names is in `reader_server.py`. It holds
+only the types the tests have used so far, and a feature that writes a new
+type adds to it.
+
+The library writes no files yet. Until it does, the tests in
+`ReaderSetupTests.cs` check the setup itself with a small file that pyarrow
+writes in its container. Every reader must return the values that were
+written, and every reader must report an error when the file is cut short.
+
+The reasons for this design are in the decision record
+[reader tests send files to reader containers that stay running](../adr/0039-reader-containers-that-stay-running.md).
+
 ## Two tiers
 
 | Tier | Runs | Readers and services |
 |---|---|---|
-| Containers | On every pull request | pyarrow, Polars, DuckDB, Spark 3.5, the current Spark 4.x, an Azure emulator, an S3 emulator |
+| Containers | On every pull request | pyarrow, Polars, DuckDB, Spark 3.5, the current Spark 4.x, an Azure emulator, an S3 emulator. The emulators are added with the storage packages. |
 | Live | When credentials are supplied, on a schedule or started by hand | Databricks with Photon on and off, Snowflake, BigQuery, Redshift Spectrum, Azure Blob Storage, Amazon S3 |
 
 A pull request can pass without the live tier. A release requires a recent
 successful live run.
+
+## Continuous integration
+
+The workflow in `.github/workflows/ci.yml` runs for every pull request and
+for every push to `main`.
+
+| Job | What it does | Runs on |
+|---|---|---|
+| Unit tests | Builds the solution and runs `Parquetry.Tests` with .NET 10. | Linux and Windows on x64, macOS on Arm64 |
+| Unit tests on the .NET 11 runtime | Runs the same `net10.0` test build on the .NET 11 runtime. | Linux |
+| Reader tests | Runs `Parquetry.Interop.Tests`. | Linux, the only hosted runner that can run the reader containers |
+| Formatting | Fails if a C# file does not follow `.editorconfig`. | Linux |
+| Links in documents | Fails if a relative link in a Markdown file is broken. | Linux |
+
+The library targets .NET 10, and an application on .NET 11 can use it. The
+second job covers that case. One unit test reads the environment variable
+`PARQUETRY_EXPECTED_RUNTIME_MAJOR`, which each job sets, and fails if the
+tests ran on a different version of the runtime. It is skipped when the
+variable is not set. The decision record is
+[unit tests run on three operating systems and on the .NET 11 runtime](../adr/0040-ci-systems-and-runtimes.md).
 
 ## Compressors
 
@@ -63,5 +121,5 @@ request records how this was done. The rule is in `AGENTS.md`.
 
 ## Commands
 
-Build and test commands will be added to `AGENTS.md` when the solution is
-created.
+The build and test commands are in `AGENTS.md`, under "Build and test
+commands".

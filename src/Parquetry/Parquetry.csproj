@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- Turns on the analyzers that report code that would not work in an
+         application published with Native AOT or with trimming. -->
+    <IsAotCompatible>true</IsAotCompatible>
+  </PropertyGroup>
+
+  <!-- The core package has no third-party dependencies and no
+       Microsoft.Extensions dependencies. A package reference added to this
+       project fails the build. References the SDK adds for its own build
+       tools are private to the build and are not counted. -->
+  <Target Name="RejectPackageDependencies" BeforeTargets="BeforeBuild">
+    <ItemGroup>
+      <_PackageDependency Include="@(PackageReference)" Condition="'%(PackageReference.PrivateAssets)' != 'all'" />
+    </ItemGroup>
+    <Error Condition="'@(_PackageDependency)' != ''" Text="Parquetry must not depend on other packages. Remove the reference to: @(_PackageDependency, ', ')." />
+  </Target>
+
+</Project>

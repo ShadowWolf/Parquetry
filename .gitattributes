@@ -1,0 +1,4 @@
+# Text files are stored and checked out with LF line endings on every
+# operating system, so that the formatting check gives the same result
+# everywhere.
+* text=auto eol=lf
