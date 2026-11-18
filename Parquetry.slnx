@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Parquetry/Parquetry.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Parquetry.Interop.Tests/Parquetry.Interop.Tests.csproj" />
+    <Project Path="tests/Parquetry.Tests/Parquetry.Tests.csproj" />
+  </Folder>
+</Solution>

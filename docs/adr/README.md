@@ -66,3 +66,7 @@ title or a link may follow. A bare number is not enough.
 | [0036](0036-decimal-storage.md) | Decimals are stored as fixed-length bytes in the smallest width that fits. |
 | [0037](0037-arrow-schema-not-written-in-first-release.md) | The Arrow schema is not written in the first release. |
 | [0038](0038-rules-for-commits-pull-requests-and-issues.md) | Five rules for commit messages, pull request descriptions, and issues, kept in `AGENTS.md` and in a skill. |
+| [0039](0039-reader-containers-that-stay-running.md) | Reader tests send files over HTTP to reader containers that start once per test run. |
+| [0040](0040-ci-systems-and-runtimes.md) | Unit tests run on Linux, Windows, and macOS with .NET 10, and once more on the .NET 11 runtime. |
+| [0041](0041-solution-layout-and-build-settings.md) | The solution starts with three projects, and the build checks three technical rules. |
+| [0042](0042-formatting-links-and-dependency-updates.md) | Continuous integration checks formatting and links, and Dependabot proposes updates. |

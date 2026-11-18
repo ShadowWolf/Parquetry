@@ -28,7 +28,8 @@ complete. The items marked "Later" are not milestones and are not part of it.
 
 ## Status
 
-Documentation is the current milestone. No library code exists.
+The Documentation and "Solution and CI" milestones are complete. "Flat
+files" is the next one. The library has no code yet.
 
 ## What is needed to continue
 

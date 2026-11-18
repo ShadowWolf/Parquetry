@@ -169,4 +169,30 @@ before the pull request is submitted.
   Record the reason. `docs/architecture/pyarrow-parity.md` lists the
   comparisons made so far.
 
-Build and test commands will be added here when the solution is created.
+## Build and test commands
+
+The build needs the .NET 10 SDK. The reader tests also need Docker. Run the
+commands from the root of the repository.
+
+```
+dotnet build
+dotnet test --project tests/Parquetry.Tests
+dotnet test --project tests/Parquetry.Interop.Tests
+dotnet format --verify-no-changes
+python3 .github/scripts/check_links.py
+```
+
+- `dotnet test --project tests/Parquetry.Tests` runs the unit tests.
+- `dotnet test --project tests/Parquetry.Interop.Tests` runs the reader tests.
+  It builds and starts the reader containers, so the first run takes several
+  minutes while Docker downloads the images.
+- `dotnet test` with no arguments runs both. `global.json` selects the
+  Microsoft.Testing.Platform test runner, and the `--project` option exists
+  only with that runner.
+- `dotnet format --verify-no-changes` reports C# code that does not follow
+  `.editorconfig`. `dotnet format` on its own fixes it.
+- `python3 .github/scripts/check_links.py` reports relative links in Markdown
+  files that point to a file or heading that does not exist.
+
+Continuous integration runs all of these for every pull request. The
+workflow is `.github/workflows/ci.yml`.

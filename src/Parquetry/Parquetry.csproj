@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- Turns on the analyzers that report code that would not work in an
+         application published with Native AOT or with trimming. -->
+    <IsAotCompatible>true</IsAotCompatible>
+  </PropertyGroup>
+
+  <!-- The core package has no third-party dependencies and no
+       Microsoft.Extensions dependencies. This target fails the build when
+       the project file gains a reference that could bring one in:
+
+       - A package reference. The SDK adds some of its own for build tools,
+         such as Microsoft.NET.ILLink.Tasks for the analyzers above. It marks
+         those IsImplicitlyDefined, and they are let through. A reference
+         written in this file is rejected even if it is marked private.
+       - A framework reference other than the base one, such as
+         Microsoft.AspNetCore.App, which contains Microsoft.Extensions.
+       - A reference to an assembly file. The SDK adds the assemblies of the
+         base library as references of this kind during the build and marks
+         each with the framework it belongs to. Those are let through. A
+         reference written in this file with that mark copied onto it would
+         be let through as well.
+       - A reference to another project whose assembly this one would use. A
+         project that only supplies an analyzer or source generator sets
+         ReferenceOutputAssembly to false and is let through.
+
+       The target reads the project file and not the compiled code. The unit
+       test in tests/Parquetry.Tests/CoreAssemblyTests.cs checks the compiled
+       assembly. -->
+  <Target Name="RejectDependencies" BeforeTargets="BeforeBuild">
+    <ItemGroup>
+      <_RejectedReference Include="@(PackageReference)" Condition="'%(PackageReference.IsImplicitlyDefined)' != 'true'" />
+      <_RejectedReference Include="@(FrameworkReference)" Condition="'%(Identity)' != 'Microsoft.NETCore.App'" />
+      <_RejectedReference Include="@(Reference)" Condition="'%(Reference.FrameworkReferenceName)' != 'Microsoft.NETCore.App'" />
+      <_RejectedReference Include="@(ProjectReference)" Condition="'%(ProjectReference.ReferenceOutputAssembly)' != 'false'" />
+    </ItemGroup>
+    <Error Condition="'@(_RejectedReference)' != ''" Text="Parquetry must not depend on anything outside the .NET base library. Remove the reference to: @(_RejectedReference, ', ')." />
+  </Target>
+
+</Project>

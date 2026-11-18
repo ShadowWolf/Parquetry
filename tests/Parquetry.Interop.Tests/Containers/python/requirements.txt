@@ -1,0 +1,5 @@
+duckdb==2.0.0
+polars==2.1.0
+pyarrow==26.0.1
+# DuckDB needs pytz to return a timestamp that has a time zone.
+pytz==2026.6

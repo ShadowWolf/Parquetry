@@ -1,0 +1,18 @@
+<Project>
+
+  <!-- Settings shared by every project in the repository. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <!-- Makes the common System namespaces available in every file without a
+         using directive. This is the default for new .NET projects. -->
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!-- NuGet warns when a package in use has a published security
+         advisory (NU1901 to NU1904). These stay warnings. As errors, a new
+         advisory would fail every build, including builds of commits that
+         did not change. -->
+    <WarningsNotAsErrors>$(WarningsNotAsErrors);NU1901;NU1902;NU1903;NU1904</WarningsNotAsErrors>
+  </PropertyGroup>
+
+</Project>

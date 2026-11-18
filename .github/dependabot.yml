@@ -1,0 +1,54 @@
+# Dependabot opens a pull request when a dependency has a new version. Each
+# of those pull requests follows the rules in AGENTS.md like any other.
+version: 2
+updates:
+  # NuGet packages. The versions are in Directory.Packages.props.
+  - package-ecosystem: nuget
+    directory: /
+    schedule:
+      interval: weekly
+
+  # The actions used in .github/workflows.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+
+  # The base images of the reader containers. Each Dockerfile is in a folder
+  # of its own and has an entry of its own. Dependabot treats one image name
+  # within one entry as a single dependency, so the two Spark images could
+  # not have different rules if they shared an entry.
+  - package-ecosystem: docker
+    directory: /tests/Parquetry.Interop.Tests/Containers/python
+    schedule:
+      interval: weekly
+
+  # This container stays on Spark 3.5, so only patch releases are wanted.
+  - package-ecosystem: docker
+    directory: /tests/Parquetry.Interop.Tests/Containers/spark-3.5
+    schedule:
+      interval: weekly
+    ignore:
+      - dependency-name: apache/spark
+        update-types:
+          - version-update:semver-major
+          - version-update:semver-minor
+
+  # This container follows Spark 4, so every release before Spark 5 is
+  # wanted.
+  - package-ecosystem: docker
+    directory: /tests/Parquetry.Interop.Tests/Containers/spark-4
+    schedule:
+      interval: weekly
+    ignore:
+      - dependency-name: apache/spark
+        update-types:
+          - version-update:semver-major
+
+  # pyarrow, Polars, and DuckDB in the Python container. pyarrow is also the
+  # reference for what the library writes, so a new pyarrow version can
+  # change what the comparisons in docs/architecture/pyarrow-parity.md show.
+  - package-ecosystem: pip
+    directory: /tests/Parquetry.Interop.Tests/Containers/python
+    schedule:
+      interval: weekly

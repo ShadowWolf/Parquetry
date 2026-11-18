@@ -1,0 +1,119 @@
+# Builds the solution and runs every check that a pull request must pass.
+# docs/architecture/testing.md describes the tests.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+# A new push to a pull request cancels the run for the push before it. Runs
+# on main are never cancelled, so every commit on main gets a finished run.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+# Each action is named by the hash of a commit, with its version in a
+# comment. A version tag can be moved to different code later, and a hash
+# cannot. Dependabot updates the hash and the comment together.
+#
+# Each job has a time limit several times its usual length. Without one, a
+# job that hangs runs for six hours, GitHub's default limit.
+
+jobs:
+  unit-tests:
+    name: Unit tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        # The Linux and Windows runners are x64. The macOS runner is Arm64.
+        os:
+          - ubuntu-latest
+          - windows-latest
+          - macos-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
+        with:
+          dotnet-version: 10.0.x
+      - name: Build
+        run: dotnet build --configuration Release
+      - name: Run the unit tests
+        env:
+          PARQUETRY_EXPECTED_RUNTIME_MAJOR: 10
+        run: dotnet test --project tests/Parquetry.Tests --configuration Release --no-build
+
+  # The library targets net10.0 and has no net11.0 target. This job runs the
+  # same test build on the .NET 11 runtime, which is what an application on
+  # .NET 11 does with a net10.0 library.
+  unit-tests-dotnet-11:
+    name: Unit tests on the .NET 11 runtime
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # The action installs SDKs. The .NET 11 SDK is installed for the
+      # .NET 11 runtime that comes with it.
+      - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
+        with:
+          dotnet-version: |
+            10.0.x
+            11.0.x
+      # global.json keeps the build on the .NET 10 SDK.
+      - name: Build
+        run: dotnet build --configuration Release
+      # DOTNET_ROLL_FORWARD makes a .NET program start on the newest
+      # installed runtime. The test program is started directly, and not
+      # through `dotnet test`, so that only the tests run on .NET 11 and the
+      # SDK's own tools stay on the runtime they were released with. One of
+      # the tests fails if the runtime is not the version named here.
+      - name: Run the unit tests on .NET 11
+        env:
+          DOTNET_ROLL_FORWARD: LatestMajor
+          PARQUETRY_EXPECTED_RUNTIME_MAJOR: 11
+        run: dotnet tests/Parquetry.Tests/bin/Release/net10.0/Parquetry.Tests.dll
+
+  reader-tests:
+    name: Reader tests
+    # The readers run in Linux containers. Of GitHub's hosted runners, only
+    # the Linux ones can run those.
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
+        with:
+          dotnet-version: 10.0.x
+      - name: Run the reader tests
+        run: dotnet test --project tests/Parquetry.Interop.Tests --configuration Release
+
+  formatting:
+    name: Formatting
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
+        with:
+          dotnet-version: 10.0.x
+      - name: Check that the code is formatted
+        run: dotnet format --verify-no-changes
+
+  links:
+    name: Links in documents
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Check the relative links in Markdown files
+        run: python3 .github/scripts/check_links.py

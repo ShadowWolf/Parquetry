@@ -4,8 +4,9 @@ Parquetry is a C# library that writes .NET objects to Parquet files. It is
 built for low, bounded memory use and high throughput, and it streams output to
 the destination where the Parquet format allows.
 
-The project is at the design stage. The architecture is documented and no
-library code exists yet. Nothing is published on NuGet.
+The project is at an early stage. The architecture is documented, and the
+solution, the build, and the test setup exist. The library itself has no code
+yet, and nothing is published on NuGet.
 
 ## Goals
 
@@ -58,6 +59,20 @@ await writer.CompleteAsync(cancellationToken);
 - [Decision records](docs/adr/README.md)
 - [Roadmap](docs/architecture/roadmap.md)
 - [Working rules for contributors](AGENTS.md)
+
+## Building
+
+The build needs the .NET 10 SDK. The reader tests also need Docker.
+
+```
+dotnet build
+dotnet test --project tests/Parquetry.Tests
+dotnet test --project tests/Parquetry.Interop.Tests
+```
+
+The second command runs the unit tests. The third runs the reader tests,
+which start pyarrow, Polars, DuckDB, and Spark in containers. The other
+commands a contributor needs are in [AGENTS.md](AGENTS.md).
 
 ## License
 

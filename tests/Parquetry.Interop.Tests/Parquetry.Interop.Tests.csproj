@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- An xUnit v3 test project is an executable. -->
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Testcontainers" />
+    <PackageReference Include="xunit.v3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/Parquetry/Parquetry.csproj" />
+  </ItemGroup>
+
+  <!-- The Dockerfiles and Python scripts of the reader containers. They are
+       copied beside the test assembly, and the tests build the container
+       images from there. -->
+  <ItemGroup>
+    <None Include="Containers/**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

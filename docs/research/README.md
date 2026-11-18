@@ -87,6 +87,29 @@ Its results are quoted in the decision records on
 [Spark and Databricks compatibility](../architecture/spark-and-databricks-compatibility.md)
 page.
 
+## Spark's row order
+
+The folder `spark-row-order` holds a check of when Spark returns rows in the
+order they have in a file. The reader tests compare rows in order, so they
+rely on the answer.
+
+- `make_files.py` writes a small file and an 88 MB file with pyarrow. In
+  both, an `id` column counts up from 0.
+- `check.py` reads each file with Spark and prints how many tasks Spark used
+  and whether the ids came back in ascending order.
+- `run.sh` runs both for Spark 3.5.9 and 4.3.0 with one, two, and four worker
+  threads, using the `apache/spark` container images. It needs `uv` and
+  Docker.
+- `results.txt` is the output from 2026-11-18.
+
+```
+sh docs/research/spark-row-order/run.sh
+```
+
+Its results are quoted on the [Testing](../architecture/testing.md) page and
+in the decision record on
+[reader containers](../adr/0039-reader-containers-that-stay-running.md).
+
 ## Size of decimal columns
 
 `pyarrow-parity/decimal_size.py` writes 1,000,000 decimal values with pyarrow
@@ -116,5 +139,5 @@ uv run --no-project --with pyarrow==26.0.1 python docs/research/pyarrow-parity/a
 
 The pyarrow programs write small Parquet files to the folder they are run
 from and overwrite or remove them. `arrow_schema_key.py` is the exception and
-writes nothing to disk. `run.sh` writes its test files to a temp
+writes nothing to disk. Each `run.sh` writes its test files to a temp
 folder. None of these files is kept in the repository.

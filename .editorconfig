@@ -1,0 +1,22 @@
+# Formatting rules for editors and for `dotnet format`. Continuous
+# integration fails if `dotnet format --verify-no-changes` finds a C# file
+# that does not follow them.
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+[*.{csproj,props,targets,slnx,json,yml,yaml}]
+indent_size = 2
+
+[*.cs]
+# A file has one namespace, declared without braces.
+csharp_style_namespace_declarations = file_scoped:warning
+# Using directives go above the namespace, with System namespaces first.
+csharp_using_directive_placement = outside_namespace:warning
+dotnet_sort_system_directives_first = true
