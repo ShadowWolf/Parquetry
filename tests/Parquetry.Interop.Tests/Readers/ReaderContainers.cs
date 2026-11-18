@@ -41,11 +41,28 @@ public sealed class ReaderContainers : IAsyncLifetime
     /// </summary>
     private static readonly TimeSpan StartTimeout = TimeSpan.FromMinutes(3);
 
+    /// <summary>
+    /// How long a container may take to answer one request. A read of a test
+    /// file takes well under a second. A reader can hang on a damaged file,
+    /// and each Spark container reads one file at a time, so without a limit
+    /// one hung read would hold up every later test for that reader.
+    /// </summary>
+    private static readonly TimeSpan RequestTimeout = TimeSpan.FromSeconds(60);
+
+    /// <summary>
+    /// The most text taken from the end of a container's output for an
+    /// error message.
+    /// </summary>
+    private const int MaxOutputLength = 4000;
+
     private static readonly string ContainersDirectory = Path.Combine(AppContext.BaseDirectory, "Containers");
 
-    private readonly HttpClient _http = new();
+    // The time limit for a request is applied in SendAsync, which can say
+    // which container did not answer.
+    private readonly HttpClient _http = new() { Timeout = Timeout.InfiniteTimeSpan };
     private readonly List<IContainer> _containers = [];
     private readonly Dictionary<string, (IContainer Container, Uri Url)> _readers = [];
+    private IContainer? _pythonContainer;
     private Uri? _pythonBaseUrl;
 
     /// <summary>
@@ -76,6 +93,7 @@ public sealed class ReaderContainers : IAsyncLifetime
             }
         }
 
+        _pythonContainer = python.Result;
         _pythonBaseUrl = BaseUrl(python.Result);
         foreach (var name in new[] { ReaderNames.PyArrow, ReaderNames.Polars, ReaderNames.DuckDb, ReaderNames.SetupFault })
         {
@@ -104,7 +122,11 @@ public sealed class ReaderContainers : IAsyncLifetime
     /// </summary>
     public async Task<byte[]> GetFileAsync(string name, CancellationToken cancellationToken)
     {
-        using var response = await _http.GetAsync(new Uri(_pythonBaseUrl!, "files/" + name), cancellationToken);
+        using var response = await SendAsync(
+            "the Python container",
+            _pythonContainer!,
+            token => _http.GetAsync(new Uri(_pythonBaseUrl!, "files/" + name), token),
+            cancellationToken);
         var body = await response.Content.ReadAsByteArrayAsync(cancellationToken);
         if (response.StatusCode != HttpStatusCode.OK)
         {
@@ -120,9 +142,9 @@ public sealed class ReaderContainers : IAsyncLifetime
     /// reader's error if it could not read the file.
     /// </summary>
     /// <exception cref="InvalidOperationException">
-    /// The reader container failed or did not answer. That is a fault in the
-    /// test setup, or a reader that crashed, and it is never returned as a
-    /// reader's error.
+    /// The reader container failed, did not answer, or did not answer in
+    /// time. That is a fault in the test setup, or a reader that crashed or
+    /// hung, and it is not returned as a reader's error.
     /// </exception>
     public async Task<ReadResult> ReadAsync(string reader, ReadOnlyMemory<byte> file, CancellationToken cancellationToken)
     {
@@ -130,42 +152,65 @@ public sealed class ReaderContainers : IAsyncLifetime
         using var content = new ReadOnlyMemoryContent(file);
         content.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
 
-        HttpResponseMessage response;
+        using var response = await SendAsync(
+            $"the container for the reader '{reader}'",
+            container,
+            token => _http.PostAsync(url, content, token),
+            cancellationToken);
+        var body = await response.Content.ReadAsStringAsync(cancellationToken);
+        switch ((int)response.StatusCode)
+        {
+            case 200:
+                using (var document = JsonDocument.Parse(body))
+                {
+                    return new ReadResult(ParseTable(document.RootElement), null);
+                }
+
+            case 422:
+                using (var document = JsonDocument.Parse(body))
+                {
+                    return new ReadResult(null, document.RootElement.GetProperty("error").GetString());
+                }
+
+            default:
+                throw new InvalidOperationException(
+                    $"The container for the reader '{reader}' answered {(int)response.StatusCode}: {body}");
+        }
+    }
+
+    /// <summary>
+    /// Sends one request and returns the response. A container that does
+    /// not answer, or does not answer in time, is reported as an error of
+    /// the test setup that names the container and includes its output.
+    /// </summary>
+    private static async Task<HttpResponseMessage> SendAsync(
+        string description,
+        IContainer container,
+        Func<CancellationToken, Task<HttpResponseMessage>> send,
+        CancellationToken cancellationToken)
+    {
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeout.CancelAfter(RequestTimeout);
         try
         {
-            response = await _http.PostAsync(url, content, cancellationToken);
+            return await send(timeout.Token);
         }
         catch (HttpRequestException error)
         {
             // A reader that crashes in native code takes the server down with
-            // it, and the request ends without an answer.
+            // it. The request in progress ends without an answer, and later
+            // requests cannot connect.
             throw new InvalidOperationException(
-                $"The container for the reader '{reader}' did not answer. The reader may have crashed on this file. " +
-                $"The container's output: {await OutputOf(container)}",
+                $"No answer from {description}. A reader in it may have crashed, on this file or on one sent earlier. " +
+                $"The end of the container's output: {await OutputOf(container)}",
                 error);
         }
-
-        using (response)
+        catch (OperationCanceledException error) when (!cancellationToken.IsCancellationRequested)
         {
-            var body = await response.Content.ReadAsStringAsync(cancellationToken);
-            switch ((int)response.StatusCode)
-            {
-                case 200:
-                    using (var document = JsonDocument.Parse(body))
-                    {
-                        return new ReadResult(ParseTable(document.RootElement), null);
-                    }
-
-                case 422:
-                    using (var document = JsonDocument.Parse(body))
-                    {
-                        return new ReadResult(null, document.RootElement.GetProperty("error").GetString());
-                    }
-
-                default:
-                    throw new InvalidOperationException(
-                        $"The container for the reader '{reader}' answered {(int)response.StatusCode}: {body}");
-            }
+            throw new InvalidOperationException(
+                $"No answer from {description} within {RequestTimeout.TotalSeconds} seconds. A reader in it may be " +
+                $"hanging, on this file or on one sent earlier. The end of the container's output: {await OutputOf(container)}",
+                error);
         }
     }
 
@@ -181,9 +226,12 @@ public sealed class ReaderContainers : IAsyncLifetime
 
         var container = new ContainerBuilder(image)
             .WithPortBinding(ContainerPort, assignRandomHostPort: true)
-            // Publishes the port on this machine's loopback address only. By
-            // default Docker publishes it on every network interface, which
-            // would let other machines send files to the reader.
+            // Publishes the port on the loopback address of the machine that
+            // runs Docker. By default Docker publishes it on every network
+            // interface, which would let other machines send files to the
+            // reader. The tests must therefore run on the same machine as
+            // Docker. With Docker on another machine, the health check below
+            // cannot reach the port and the start fails.
             .WithCreateParameterModifier(parameters =>
             {
                 var bindings = parameters.HostConfig?.PortBindings?.Values.SelectMany(list => list).ToList() ?? [];
@@ -213,8 +261,8 @@ public sealed class ReaderContainers : IAsyncLifetime
             var output = await OutputOf(container);
             await container.DisposeAsync();
             throw new InvalidOperationException(
-                $"The reader container built from Containers/{dockerfile} did not become ready within {StartTimeout.TotalMinutes} minutes. " +
-                $"Its output: {output}",
+                $"The reader container built from Containers/{dockerfile} did not start, or did not answer its health check " +
+                $"within {StartTimeout.TotalMinutes} minutes. The end of its output: {output}",
                 error);
         }
 
@@ -222,8 +270,9 @@ public sealed class ReaderContainers : IAsyncLifetime
     }
 
     /// <summary>
-    /// Returns what a container has written to its output, for an error
-    /// message. If the output cannot be read, says so and does not throw.
+    /// Returns the end of what a container has written to its output, for
+    /// an error message. If the output cannot be read, says so and does not
+    /// throw.
     /// </summary>
     private static async Task<string> OutputOf(IContainer container)
     {
@@ -231,6 +280,11 @@ public sealed class ReaderContainers : IAsyncLifetime
         {
             var (stdout, stderr) = await container.GetLogsAsync();
             var output = (stdout + stderr).Trim();
+            if (output.Length > MaxOutputLength)
+            {
+                output = output[^MaxOutputLength..];
+            }
+
             return output.Length == 0 ? "(none)" : output;
         }
         catch (Exception error)

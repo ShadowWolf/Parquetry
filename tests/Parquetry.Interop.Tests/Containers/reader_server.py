@@ -18,8 +18,12 @@ Responses to /read:
   200  {"columns": [...], "rows": [[...]]}
   422  {"error": "..."}  The reader could not read the file. Only an error
                          of a type the reader's own library raises counts.
-  500  {"error": "..."}  The server itself failed. This is a fault in the
-                         test setup, and never a statement about the file.
+  500  {"error": "..."}  Anything else failed. The tests treat this as a
+                         fault in the test setup.
+
+The split goes by the type of the error, so it is not exact. A library can
+raise one of its own error types for a cause that is not the file, such as a
+Python module missing from the image, and that is answered with 422.
 
 Each column is {"name", "nativeType", "kind", "nullable"}:
 

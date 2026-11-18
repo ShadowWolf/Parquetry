@@ -16,8 +16,8 @@ public class CoreAssemblyTests
     /// <remarks>
     /// The compiler leaves out a reference that the code does not use, so
     /// this test catches a dependency only once code calls it. The
-    /// RejectPackageDependencies target in Parquetry.csproj catches a
-    /// package reference as soon as it is added.
+    /// RejectDependencies target in Parquetry.csproj catches a reference as
+    /// soon as it is added to the project file.
     /// </remarks>
     [Fact]
     public void References_only_assemblies_that_ship_with_the_runtime()

@@ -38,10 +38,12 @@ DUCKDB_KINDS = {
 }
 
 # The exceptions each library raises when it cannot read a file. pyarrow
-# raises OSError for some of them, such as a file that ends too early. A
-# Polars panic is a failure inside Polars, so it also counts as Polars not
-# being able to read the file.
-PYARROW_ERRORS = (pyarrow.ArrowException, OSError)
+# raises OSError for some of them, such as a file that ends too early. It
+# does not check text when it reads, so a string that is not valid UTF-8
+# fails only when the values are turned into Python strings, with a
+# UnicodeDecodeError. A Polars panic is a failure inside Polars, so it also
+# counts as Polars not being able to read the file.
+PYARROW_ERRORS = (pyarrow.ArrowException, OSError, UnicodeDecodeError)
 POLARS_ERRORS = (polars.exceptions.PolarsError, polars.exceptions.PanicException)
 DUCKDB_ERRORS = (duckdb.Error,)
 

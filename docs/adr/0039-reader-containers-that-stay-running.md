@@ -55,9 +55,10 @@ were not put to the project owner as separate questions.
 - A reader that cannot read a file is answered with status 422 and the
   reader's message. Only an error of a type that the reader's own library
   raises counts. Any other failure is answered with status 500, and the C#
-  side raises it as an error of the test setup. A test that expects a reader
-  to reject a file therefore does not pass because the setup broke. One of
-  the setup's own tests checks this on every run.
+  side raises it as an error of the test setup. This keeps most faults of
+  the setup from passing as a reader rejecting a file, and one of the
+  setup's own tests checks it on every run. The split goes by the type of
+  the error, so it is not exact.
 - The Python container also writes a small known-good file on request. The
   tests of the setup use it.
 - The container files name exact versions. On 2026-11-18 they were pyarrow
@@ -74,10 +75,11 @@ were not put to the project owner as separate questions.
 - Spark runs with one worker thread. With one thread it reads a test file in
   a single task and returns the rows in file order, which the comparison
   relies on.
-- A container's port is published only on the loopback address of the test
-  machine, so other machines cannot send files to a reader.
+- A container's port is published only on the loopback address of the
+  machine that runs Docker, so other machines cannot send files to a reader.
 - A container that does not answer its health check within three minutes
-  fails the test run with the container's output in the message.
+  fails the test run, and a request that gets no answer within 60 seconds
+  fails its test. Both messages include the end of the container's output.
 
 ## Consequences
 
@@ -104,8 +106,22 @@ were not put to the project owner as separate questions.
   one thread read an 88 MB file in one task. A test with a larger file, or
   one that changes how Spark is started, cannot assume the order.
 - pyarrow, Polars, and DuckDB share one process. If one of them crashes in
-  native code, the server stops, and the later tests for all three fail with
-  an error that says the container did not answer.
+  native code, the server stops. The test that sent the file and every later
+  test that uses the Python container fail with an error that says the
+  container gave no answer. That includes the tests for the Spark readers
+  that fetch the known-good file from it. The review of this change made
+  Polars 2.1.0 crash this way with a file that had one damaged byte.
+  Running each reader in its own process would contain a crash. That was not
+  done here.
+- With one worker thread, a Spark container reads one file at a time, and a
+  read that hangs holds up the reads after it until each gives up after 60
+  seconds. The review made Spark 3.5.9 hang this way with a file that had
+  one damaged byte. Two worker threads would let one more read through, at
+  the cost of the single task that the row order relies on.
+- The tests have to run on the machine that runs Docker. With Docker on
+  another machine, or with the tests inside a container that uses the host's
+  Docker, the published port cannot be reached and the containers fail to
+  start.
 - The server reads a whole file. The tests that run filtered queries, which
   the Testing page describes for statistics, the page index, and bloom
   filters, need a request for queries. It is added with the first of those

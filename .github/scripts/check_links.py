@@ -13,7 +13,8 @@ What it checks:
 
 - Inline links, [text](target), including text that wraps onto the next
   line, a target in angle brackets, and a target followed by a title.
-- Reference definitions, [label]: target.
+- Reference definitions, [label]: target. A footnote, [^label]: text, is not
+  one.
 - href attributes in HTML.
 - A target that starts with / is taken from the root of the repository.
 
@@ -38,10 +39,16 @@ import subprocess
 import sys
 from urllib.parse import unquote
 
-INLINE_LINK = re.compile(r"\[[^\[\]]*\]\(\s*<?([^()<>\s]+)>?(?:\s+\"[^\"]*\")?\s*\)")
-REFERENCE_DEFINITION = re.compile(r"^ {0,3}\[[^\]]+\]:\s*<?([^<>\s]+)>?", re.MULTILINE)
-HREF = re.compile(r"href=\"([^\"]+)\"")
-FENCED_BLOCK = re.compile(r"^[ \t]*(```|~~~).*?^[ \t]*\1[ \t]*$", re.MULTILINE | re.DOTALL)
+# Each of the three link patterns has a group named "target".
+INLINE_LINK = re.compile(
+    r"\[[^\[\]]*\]\(\s*<?(?P<target>[^()<>\s]+)>?"
+    r"(?:\s+(?:\"[^\"]*\"|'[^']*'|\([^()]*\)))?\s*\)"
+)
+REFERENCE_DEFINITION = re.compile(r"^ {0,3}\[(?!\^)[^\]]+\]:\s*<?(?P<target>[^<>\s]+)>?", re.MULTILINE)
+HREF = re.compile(r"href=(?P<quote>[\"'])(?P<target>.+?)(?P=quote)")
+# A block opened by three or more backticks or tildes ends at a line with the
+# same run of them.
+FENCED_BLOCK = re.compile(r"^[ \t]*(`{3,}|~{3,}).*?^[ \t]*\1[ \t]*$", re.MULTILINE | re.DOTALL)
 HTML_COMMENT = re.compile(r"<!--.*?-->", re.DOTALL)
 CODE_SPAN = re.compile(r"(`+)(?!`).*?(?<!`)\1(?!`)", re.DOTALL)
 HEADING = re.compile(r"^#{1,6}[ \t]+(.*?)[ \t]*#*[ \t]*$", re.MULTILINE)
@@ -49,8 +56,8 @@ EXTERNAL = re.compile(r"^[a-zA-Z][a-zA-Z0-9+.-]*:")
 
 
 def blank(match):
-    """Replaces a match with spaces, keeping line breaks, so that the line
-    numbers of the text after it do not change."""
+    """Replaces a match with spaces, keeping line breaks, so that positions
+    and line numbers in the rest of the text do not change."""
     return re.sub(r"[^\n]", " ", match.group(0))
 
 
@@ -60,10 +67,14 @@ def prose(path, keep_code_spans=False):
     with open(path, encoding="utf-8") as file:
         text = file.read()
     text = FENCED_BLOCK.sub(blank, text)
-    text = HTML_COMMENT.sub(blank, text)
-    if not keep_code_spans:
-        text = CODE_SPAN.sub(blank, text)
-    return text
+    # Comments are looked for in a copy that has the code spans blanked, so
+    # that a comment marker inside a code span does not start a comment.
+    without_spans = CODE_SPAN.sub(blank, text)
+    result = without_spans if not keep_code_spans else text
+    for comment in HTML_COMMENT.finditer(without_spans):
+        start, end = comment.span()
+        result = result[:start] + blank(comment) + result[end:]
+    return result
 
 
 def anchors(path):
@@ -89,7 +100,7 @@ def targets(text):
     """Yields (line number, target) for every link in a file's text."""
     for pattern in (INLINE_LINK, REFERENCE_DEFINITION, HREF):
         for match in pattern.finditer(text):
-            yield text.count("\n", 0, match.start(1)) + 1, match.group(1)
+            yield text.count("\n", 0, match.start("target")) + 1, match.group("target")
 
 
 def main():

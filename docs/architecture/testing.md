@@ -58,10 +58,10 @@ the five readers.
 | The versions of Python and Spark | The `FROM` line of each Dockerfile |
 
 A reader's answer is one of two things: a table, or the reader's error
-message when it could not read the file. Only an error that the reader's own
-library raises counts as the second. If anything else fails, the test fails
-with an error from the test setup, so a test that expects a reader to reject
-a file does not pass because the setup broke.
+message when it could not read the file. Only an error of a type that the
+reader's own library raises counts as the second. If anything else fails,
+the test fails with an error from the test setup. This keeps most faults of
+the setup from passing as a reader rejecting a file.
 
 For each column, the answer gives the reader's own name for the type and a
 name that is the same for every reader, such as `int64`. pyarrow also says
@@ -77,6 +77,26 @@ other reader test relies on these.
 
 The reasons for this design are in the decision record
 [reader tests send files to reader containers that stay running](../adr/0039-reader-containers-that-stay-running.md).
+
+### Limits of the setup
+
+- The split between a reader's error and a fault of the setup goes by the
+  type of the error, so it is not exact. A library can raise its own error
+  type for a cause that is not the file, such as a Python module missing from
+  the image. A test that expects a reader to reject a file should also check
+  that the message is about the file.
+- pyarrow, Polars, and DuckDB run in one process. A reader that crashes in
+  native code stops that process. The test that sent the file fails with "No
+  answer from the container", and so does every later test that uses the
+  Python container, including the ones that only fetch the known-good file
+  from it. Polars 2.1.0 was seen to crash this way on a file with one damaged
+  byte.
+- Each Spark container reads one file at a time. A read that hangs holds up
+  the reads after it. A request with no answer after 60 seconds fails with a
+  message that says a reader may be hanging on this file or an earlier one.
+  Spark 3.5.9 was seen to hang this way on a file with one damaged byte.
+- The tests must run on the machine that runs Docker, because each
+  container's port is published only on that machine's loopback address.
 
 ### Adding a type
 
