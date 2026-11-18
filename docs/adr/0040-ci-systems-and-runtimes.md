@@ -25,20 +25,29 @@ on Linux whatever is decided here.
 3. Unit tests on Linux, Windows, and macOS with .NET 10 only.
 4. Unit tests on Linux with .NET 10 only.
 
+The question put to the project owner gave one reason for the three systems:
+GitHub's Linux and Windows runners are x64 and its macOS runner is Arm64, so
+together they cover both kinds of processor.
+
 ## Decision
 
-Option 1. The project owner chose it on 2026-11-17.
+Option 1. The project owner chose it on 2026-11-17, including that the
+.NET 11 run uses roll-forward and adds no `net11.0` target.
 
-The .NET 11 run does not add a `net11.0` target. The job builds the tests for
-`net10.0` as usual and starts the test program with the environment variable
-`DOTNET_ROLL_FORWARD` set to `LatestMajor`, which makes a .NET program start
-on the newest runtime installed. This is what happens to the library inside
-an application on .NET 11.
+The author of the change chose how the .NET 11 run is checked, while building
+it.
+
+The .NET 11 job builds the tests for `net10.0` as usual and starts the test
+program with the environment variable `DOTNET_ROLL_FORWARD` set to
+`LatestMajor`, which makes a .NET program start on the newest runtime
+installed. This is what happens to the library inside an application on
+.NET 11.
 
 A job that meant to test .NET 11 and ran on .NET 10 would still pass. To
 prevent that, each job sets `PARQUETRY_EXPECTED_RUNTIME_MAJOR` to the version
 it means to test, and one unit test fails if the runtime is a different
-version. The test is skipped when the variable is not set.
+version. On GitHub Actions the test also fails if the variable is not set.
+Anywhere else it is skipped when the variable is not set.
 
 This was tried before the workflow was written. In a container that had only
 the .NET 11 runtime, the `net10.0` test build ran and reported .NET 11.0.0.
@@ -48,13 +57,14 @@ Without the setting it did not start.
 
 - The workflow is `.github/workflows/ci.yml`. It runs for every pull request
   and for every push to `main`.
-- GitHub's Linux and Windows runners are x64 and its macOS runner is Arm64,
-  so the unit tests run on both kinds of processor. That will matter for
-  code that has a separate path for each, such as the compressors.
+- The unit tests run on both kinds of processor. That will matter for code
+  that has a separate path for each, such as the compressors.
 - A contributor needs only the .NET 10 SDK. `global.json` keeps the build on
   it even where a newer SDK is installed.
-- The reader tests run on Linux x64 with .NET 10 only. A fault that appears
-  only on another system or runtime, and only in a file's contents, would
-  have to be caught by a unit test.
+- The reader tests run on Linux x64 with .NET 10 only. If the library wrote a
+  wrong file only on Windows, on macOS, on Arm64, or on .NET 11, the reader
+  tests would not see it. A unit test would have to catch it.
 - A `net11.0` target, if one is added later, needs its own test run. The
   roll-forward job does not cover code compiled for .NET 11.
+- Each job has a time limit, so a job that hangs fails within minutes and
+  does not run for GitHub's default of six hours.

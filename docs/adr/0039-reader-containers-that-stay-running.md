@@ -32,14 +32,16 @@ to start, which is too slow to repeat for every test.
 Option 1. The project owner chose it on 2026-11-17, with the test project
 taking the Testcontainers package to start and stop the containers.
 
-The details below were settled while building it:
+The author of the change chose the details below while building it. They
+were not put to the project owner as separate questions.
 
-- There are three containers: one for pyarrow, Polars, and DuckDB, one for
-  Spark 3.5, and one for the current Spark 4.x. Each image is built from a
-  Dockerfile in `tests/Parquetry.Interop.Tests/Containers`.
+- There are three containers. The Python container holds pyarrow, Polars,
+  and DuckDB. The other two hold Spark 3.5 and the current Spark 4.x. Each
+  image is built from a Dockerfile under
+  `tests/Parquetry.Interop.Tests/Containers`.
 - Every container runs the same small HTTP server, written with Python's
-  standard library. `reader_server.py` in that folder describes the requests
-  and responses.
+  standard library. The comment at the top of `reader_server.py` in that
+  folder describes the requests and responses.
 - A test sends the file's bytes in the request. No folder is shared between
   the test machine and the containers, so file permissions and the way Docker
   shares folders on each operating system do not matter.
@@ -47,40 +49,70 @@ The details below were settled while building it:
   with a name that is the same for every reader, such as `int64`. Each value
   is sent as text, because JSON numbers cannot hold every 64-bit integer, NaN,
   or negative zero.
+- The response also says whether a column can hold nulls, for a reader that
+  reports it. Of these readers only pyarrow does. Spark marks every column it
+  reads from a file as able to hold nulls, whatever the file says.
 - A reader that cannot read a file is answered with status 422 and the
-  reader's message. A failure in the server itself is answered with status
-  500, and the test setup raises it as an error. A test that expects a reader
-  to reject a file therefore cannot pass because the setup broke.
-- The pyarrow container also writes a small known-good file on request. The
-  tests of the setup use it, because the library writes no files yet.
-- The versions are fixed: pyarrow 26.0.1, Polars 2.1.0, DuckDB 2.0.0, Spark
-  3.5.9, and Spark 4.3.0. Spark 4.3.0 was the newest 4.x release on
-  2026-11-18. The earlier checks of Spark, in
-  `docs/research/spark-decimal-check`, went up to 4.1.4.
+  reader's message. Only an error of a type that the reader's own library
+  raises counts. Any other failure is answered with status 500, and the C#
+  side raises it as an error of the test setup. A test that expects a reader
+  to reject a file therefore does not pass because the setup broke. One of
+  the setup's own tests checks this on every run.
+- The Python container also writes a small known-good file on request. The
+  tests of the setup use it.
+- The container files name exact versions. On 2026-11-18 they were pyarrow
+  26.0.1, Polars 2.1.0, DuckDB 2.0.0, Python 3.14.10, Spark 3.5.9, and Spark
+  4.3.0. Dependabot proposes newer ones, as the decision on
+  [formatting, links, and dependency updates](0042-formatting-links-and-dependency-updates.md)
+  describes, so the container files are the place to look for the versions
+  in use.
+- The list of defaults given to the project owner on 2026-11-17 named Spark
+  3.5.7 and 4.1.4, the versions the earlier checks in
+  `docs/research/spark-decimal-check` used. The decision on which readers
+  verify the output says Spark 3.5 and the current 4.x release. On 2026-11-18
+  the newest releases were 3.5.9 and 4.3.0, so those were used.
+- Spark runs with one worker thread. With one thread it reads a test file in
+  a single task and returns the rows in file order, which the comparison
+  relies on.
+- A container's port is published only on the loopback address of the test
+  machine, so other machines cannot send files to a reader.
+- A container that does not answer its health check within three minutes
+  fails the test run with the container's output in the message.
 
 ## Consequences
 
 - A reader test is an ordinary xUnit test that runs once for each reader. On
-  the machine it was built on, the ten tests of the setup take about 11
-  seconds once the images exist.
+  an Arm64 Mac with the images already built, the eleven tests of the setup
+  take about 10 seconds.
 - Reader tests need Docker. A contributor without it can still build
   everything and run the unit tests.
 - The first run downloads the base images and builds the three reader
   images. The images are kept afterwards so that the next run is fast. They
-  take about 3 GB of disk space.
+  take about 3 GB of disk space. An image's tag is a hash of the container
+  files, so a change to those files leaves the older images behind until
+  someone removes them with `docker rmi`.
 - Testcontainers starts one small container of its own. It removes the reader
   containers if the test run is killed before it can stop them.
 - A whole file travels in one request. That suits test files of a few
   megabytes. A test with a very large file needs another way to hand it over.
-- A type the tests have not used yet has no common name. Adding one means
-  adding it to the list in `reader_server.py`, to the table of each reader,
-  and to the `ColumnKind` type in the test project.
+- A type the tests have not used yet has no common name. Its column comes
+  back marked as unknown, and a test that expects a known type fails on that.
+  "Adding a type" on the [Testing](../architecture/testing.md) page lists
+  what to change.
+- Rows are compared in order. Spark keeps file order for a file it reads in
+  one task. In the measurement in `docs/research/spark-row-order`, Spark with
+  one thread read an 88 MB file in one task. A test with a larger file, or
+  one that changes how Spark is started, cannot assume the order.
+- pyarrow, Polars, and DuckDB share one process. If one of them crashes in
+  native code, the server stops, and the later tests for all three fail with
+  an error that says the container did not answer.
 - The server reads a whole file. The tests that run filtered queries, which
-  the [Testing](../architecture/testing.md) page describes for statistics,
-  the page index, and bloom filters, need a request for queries. It is added
-  with the first of those features.
-- Spark reads with its default settings, apart from turning off its web
-  interface. This matches the goal that files are readable without reader
-  settings.
+  the Testing page describes for statistics, the page index, and bloom
+  filters, need a request for queries. It is added with the first of those
+  features.
+- Spark reads with its default settings. The two settings on its command
+  line turn off its web interface and set the one worker thread, and neither
+  changes how a file is read. This matches the goal that files are readable
+  without reader settings.
 - The Testcontainers package is a dependency of the test project only. The
   core package still has none.

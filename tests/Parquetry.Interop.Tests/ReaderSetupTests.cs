@@ -1,14 +1,12 @@
 using Parquetry.Interop.Tests.Readers;
 using Xunit;
 
-[assembly: AssemblyFixture(typeof(ReaderContainers))]
-
 namespace Parquetry.Interop.Tests;
 
 /// <summary>
-/// Shows that the reader containers work, using a file that pyarrow wrote.
-/// The library writes no files yet, so these tests are about the test setup
-/// and not about the library.
+/// Checks the reader containers themselves, using a file that pyarrow wrote.
+/// These tests are about the test setup and not about the library. Every
+/// other reader test relies on what they show.
 /// </summary>
 public class ReaderSetupTests(ReaderContainers readers)
 {
@@ -46,5 +44,23 @@ public class ReaderSetupTests(ReaderContainers readers)
 
         Assert.Null(result.Table);
         Assert.False(string.IsNullOrWhiteSpace(result.Error));
+    }
+
+    /// <summary>
+    /// A failure in the reader container's own code is raised as an error of
+    /// the test setup. It is not returned as a reader's error, which would
+    /// let a test that expects a reader to reject a file pass because the
+    /// setup broke.
+    /// </summary>
+    [Fact]
+    public async Task Fault_in_the_setup_is_not_reported_as_a_reader_error()
+    {
+        var cancellationToken = TestContext.Current.CancellationToken;
+        var file = await readers.GetFileAsync(KnownGoodFile.Name, cancellationToken);
+
+        var error = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => readers.ReadAsync(ReaderNames.SetupFault, file, cancellationToken));
+
+        Assert.Contains("answered 500", error.Message, StringComparison.Ordinal);
     }
 }

@@ -186,7 +186,9 @@ python3 .github/scripts/check_links.py
 - `dotnet test --project tests/Parquetry.Interop.Tests` runs the reader tests.
   It builds and starts the reader containers, so the first run takes several
   minutes while Docker downloads the images.
-- `dotnet test` with no arguments runs both.
+- `dotnet test` with no arguments runs both. `global.json` selects the
+  Microsoft.Testing.Platform test runner, and the `--project` option exists
+  only with that runner.
 - `dotnet format --verify-no-changes` reports C# code that does not follow
   `.editorconfig`. `dotnet format` on its own fixes it.
 - `python3 .github/scripts/check_links.py` reports relative links in Markdown

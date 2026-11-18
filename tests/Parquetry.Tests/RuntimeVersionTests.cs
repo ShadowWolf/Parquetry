@@ -1,3 +1,4 @@
+using System.Globalization;
 using Xunit;
 
 namespace Parquetry.Tests;
@@ -18,15 +19,27 @@ public class RuntimeVersionTests
     /// these tests on a later runtime. Each job sets the variable to the
     /// version it means to test, and this test fails if the tests ran on a
     /// different one. Without it, a job could pass on the wrong runtime and
-    /// nothing would show that. The test is skipped when the variable is not
-    /// set, as on a contributor's machine.
+    /// nothing would show that.
     /// </summary>
+    /// <remarks>
+    /// On GitHub Actions the test fails if the variable is not set, so that
+    /// a job cannot lose the check by losing the variable. Anywhere else,
+    /// such as on a contributor's machine, the test is skipped when the
+    /// variable is not set.
+    /// </remarks>
     [Fact]
     public void Tests_run_on_the_runtime_the_job_asked_for()
     {
         var expected = Environment.GetEnvironmentVariable(ExpectedMajorVariable);
-        Assert.SkipWhen(string.IsNullOrEmpty(expected), $"{ExpectedMajorVariable} is not set.");
+        if (string.IsNullOrEmpty(expected))
+        {
+            // GitHub Actions sets GITHUB_ACTIONS to "true" in every job.
+            Assert.False(
+                Environment.GetEnvironmentVariable("GITHUB_ACTIONS") == "true",
+                $"{ExpectedMajorVariable} is not set. Every job in the workflow must set it.");
+            Assert.Skip($"{ExpectedMajorVariable} is not set.");
+        }
 
-        Assert.Equal(expected, Environment.Version.Major.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        Assert.Equal(expected, Environment.Version.Major.ToString(CultureInfo.InvariantCulture));
     }
 }

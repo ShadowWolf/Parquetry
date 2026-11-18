@@ -3,7 +3,10 @@ using Xunit;
 namespace Parquetry.Interop.Tests.Readers;
 
 /// <summary>
-/// The names of the readers that the tests can send a file to.
+/// The names a test uses to say which reader gets a file.
+/// <see cref="ReaderContainers"/> turns each name into a container and an
+/// address in it. The two Spark names go to different containers, and
+/// inside each container the reader is called <c>spark</c>.
 /// </summary>
 public static class ReaderNames
 {
@@ -21,6 +24,13 @@ public static class ReaderNames
 
     /// <summary>The current Spark 4.x release.</summary>
     public const string Spark4 = "spark-4";
+
+    /// <summary>
+    /// Not a reader. The Python container answers a file sent to this name
+    /// the way it answers when its own code fails. One test uses it to check
+    /// that such a failure is not taken for a reader rejecting the file.
+    /// </summary>
+    public const string SetupFault = "setup-fault";
 
     /// <summary>
     /// Every reader, as data for a test that runs once per reader.

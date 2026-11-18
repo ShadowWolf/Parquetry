@@ -10,13 +10,20 @@ public static class ReaderAssert
 {
     /// <summary>
     /// Checks that a reader returned a table with the expected columns and
-    /// rows, in order.
+    /// rows.
     /// </summary>
-    /// <param name="expectedColumns">The name and kind of each column.</param>
+    /// <remarks>
+    /// Rows are compared in order, so the reader must return them in the
+    /// order they have in the file. Spark does that only for a file it reads
+    /// in one task. "Row order" in docs/architecture/testing.md says when
+    /// that holds. Whether a column can hold nulls is compared only for a
+    /// reader that reports it.
+    /// </remarks>
+    /// <param name="expectedColumns">The columns the file declares.</param>
     /// <param name="expectedRows">The rows, with values of the .NET types described on <see cref="ReaderTable"/>.</param>
     /// <param name="result">What the reader returned.</param>
     public static void TableEquals(
-        IReadOnlyList<(string Name, ColumnKind Kind)> expectedColumns,
+        IReadOnlyList<ExpectedColumn> expectedColumns,
         IReadOnlyList<IReadOnlyList<object?>> expectedRows,
         ReadResult result)
     {
@@ -29,6 +36,16 @@ public static class ReaderAssert
         Assert.Equal(
             expectedColumns.Select(column => $"{column.Name}: {column.Kind}"),
             table.Columns.Select(column => $"{column.Name}: {column.Kind}"));
+
+        for (var column = 0; column < expectedColumns.Count; column++)
+        {
+            if (table.Columns[column].Nullable is { } nullable && nullable != expectedColumns[column].Nullable)
+            {
+                Assert.Fail(
+                    $"Column '{expectedColumns[column].Name}': expected nullable to be {expectedColumns[column].Nullable}, " +
+                    $"and the reader reported {nullable}.");
+            }
+        }
 
         Assert.Equal(expectedRows.Count, table.Rows.Count);
         for (var row = 0; row < expectedRows.Count; row++)

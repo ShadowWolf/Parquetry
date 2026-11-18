@@ -7,14 +7,31 @@
   </PropertyGroup>
 
   <!-- The core package has no third-party dependencies and no
-       Microsoft.Extensions dependencies. A package reference added to this
-       project fails the build. References the SDK adds for its own build
-       tools are private to the build and are not counted. -->
-  <Target Name="RejectPackageDependencies" BeforeTargets="BeforeBuild">
+       Microsoft.Extensions dependencies. This target fails the build when
+       the project file gains a reference that could bring one in:
+
+       - A package reference. The SDK adds some of its own for build tools,
+         such as Microsoft.NET.ILLink.Tasks for the analyzers above. It marks
+         those IsImplicitlyDefined, and they are let through. A reference
+         written in this file is rejected even if it is marked private.
+       - A framework reference other than the base one, such as
+         Microsoft.AspNetCore.App, which contains Microsoft.Extensions.
+       - A reference to an assembly file.
+       - A reference to another project whose assembly this one would use. A
+         project that only supplies an analyzer or source generator sets
+         ReferenceOutputAssembly to false and is let through.
+
+       The target reads the project file and not the compiled code. The unit
+       test in tests/Parquetry.Tests/CoreAssemblyTests.cs checks the compiled
+       assembly. -->
+  <Target Name="RejectDependencies" BeforeTargets="BeforeBuild">
     <ItemGroup>
-      <_PackageDependency Include="@(PackageReference)" Condition="'%(PackageReference.PrivateAssets)' != 'all'" />
+      <_RejectedReference Include="@(PackageReference)" Condition="'%(PackageReference.IsImplicitlyDefined)' != 'true'" />
+      <_RejectedReference Include="@(FrameworkReference)" Condition="'%(Identity)' != 'Microsoft.NETCore.App'" />
+      <_RejectedReference Include="@(Reference)" />
+      <_RejectedReference Include="@(ProjectReference)" Condition="'%(ProjectReference.ReferenceOutputAssembly)' != 'false'" />
     </ItemGroup>
-    <Error Condition="'@(_PackageDependency)' != ''" Text="Parquetry must not depend on other packages. Remove the reference to: @(_PackageDependency, ', ')." />
+    <Error Condition="'@(_RejectedReference)' != ''" Text="Parquetry must not depend on anything outside the .NET base library. Remove the reference to: @(_RejectedReference, ', ')." />
   </Target>
 
 </Project>

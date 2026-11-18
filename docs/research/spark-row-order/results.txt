@@ -1,0 +1,14 @@
+FILE small.parquet 5753 bytes, 1 row groups
+FILE big.parquet 88525674 bytes, 12 row groups
+RESULT spark 3.5.9 master local[1] file small.parquet tasks 1 rows 1000 in file order True
+RESULT spark 3.5.9 master local[1] file big.parquet tasks 1 rows 3000000 in file order True
+RESULT spark 3.5.9 master local[2] file small.parquet tasks 1 rows 1000 in file order True
+RESULT spark 3.5.9 master local[2] file big.parquet tasks 2 rows 3000000 in file order True
+RESULT spark 3.5.9 master local[4] file small.parquet tasks 1 rows 1000 in file order True
+RESULT spark 3.5.9 master local[4] file big.parquet tasks 4 rows 3000000 in file order True
+RESULT spark 4.3.0 master local[1] file small.parquet tasks 1 rows 1000 in file order True
+RESULT spark 4.3.0 master local[1] file big.parquet tasks 1 rows 3000000 in file order True
+RESULT spark 4.3.0 master local[2] file small.parquet tasks 1 rows 1000 in file order True
+RESULT spark 4.3.0 master local[2] file big.parquet tasks 2 rows 3000000 in file order True
+RESULT spark 4.3.0 master local[4] file small.parquet tasks 1 rows 1000 in file order True
+RESULT spark 4.3.0 master local[4] file big.parquet tasks 4 rows 3000000 in file order True

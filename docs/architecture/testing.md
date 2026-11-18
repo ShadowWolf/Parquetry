@@ -41,38 +41,77 @@ by default has not been checked yet.
 
 ### How a test reaches a reader
 
-The readers run in three containers: one for pyarrow, Polars, and DuckDB, one
-for Spark 3.5, and one for the current Spark 4.x. The containers start once
-for the whole test run and are stopped when it ends. Each runs a small HTTP
-server. A test sends a file's bytes to a reader and gets back the columns and
-rows the reader saw, and the test compares them with what it wrote. A test
-that takes a reader's name runs once for each of the five readers.
+The readers run in three containers. The Python container holds pyarrow,
+Polars, and DuckDB. The other two hold Spark 3.5 and the current Spark 4.x.
+The containers start once for the whole test run and are stopped when it
+ends. Each runs a small HTTP server. A test sends a file's bytes to a reader
+and gets back the columns and rows the reader saw, and the test compares them
+with what it wrote. A test that takes a reader's name runs once for each of
+the five readers.
 
 | Part | Where it is |
 |---|---|
 | The Dockerfiles, the server, and the Python code that calls each reader | `tests/Parquetry.Interop.Tests/Containers` |
 | The requests the server accepts and the form of its answers | The comment at the top of `reader_server.py` in that folder |
 | The C# code that starts the containers and sends files | `tests/Parquetry.Interop.Tests/Readers` |
-| The versions of pyarrow, Polars, and DuckDB | `requirements.txt` in the containers folder |
-| The versions of Spark and Python | The first line of each Dockerfile |
+| The versions of pyarrow, Polars, and DuckDB | `python/requirements.txt` in the containers folder |
+| The versions of Python and Spark | The `FROM` line of each Dockerfile |
 
 A reader's answer is one of two things: a table, or the reader's error
-message when it could not read the file. If the server itself fails, the test
-fails with an error from the test setup, so a test that expects a reader to
-reject a file cannot pass because the setup broke.
+message when it could not read the file. Only an error that the reader's own
+library raises counts as the second. If anything else fails, the test fails
+with an error from the test setup, so a test that expects a reader to reject
+a file does not pass because the setup broke.
 
-The server knows a column's type by a name that is the same for every
-reader, such as `int64`. The list of names is in `reader_server.py`. It holds
-only the types the tests have used so far, and a feature that writes a new
-type adds to it.
+For each column, the answer gives the reader's own name for the type and a
+name that is the same for every reader, such as `int64`. pyarrow also says
+whether the column can hold nulls. The other readers do not report that, so
+only pyarrow checks that a column the library writes as required is marked
+required in the file.
 
-The library writes no files yet. Until it does, the tests in
-`ReaderSetupTests.cs` check the setup itself with a small file that pyarrow
-writes in its container. Every reader must return the values that were
-written, and every reader must report an error when the file is cut short.
+`ReaderSetupTests.cs` checks the setup itself with a small file that pyarrow
+writes in the Python container. Every reader must return the values that
+were written, every reader must report an error when the file is cut short,
+and a fault in the server must not be reported as a reader's error. Every
+other reader test relies on these.
 
 The reasons for this design are in the decision record
 [reader tests send files to reader containers that stay running](../adr/0039-reader-containers-that-stay-running.md).
+
+### Adding a type
+
+The setup knows only the types the tests have used so far: `bool`, `int32`,
+`int64`, `float64`, and `string`. A column of any other type comes back with
+its kind marked as unknown and its values as text, and a test that expects a
+known kind fails on the kind. A feature that writes a new type adds it in
+each of these places:
+
+1. `Containers/reader_server.py`: the list of kinds in the comment at the
+   top, and the table `ENCODERS`, which turns a value into text.
+2. `Containers/python_readers.py` and `Containers/spark_reader.py`: each
+   reader's table of kinds, which maps the reader's own name for the type to
+   the common name.
+3. `Readers/ColumnKind.cs`: the `ColumnKind` type.
+4. `Readers/ReaderContainers.cs`: `ParseKind`, and `ParseValue`, which turns
+   the text back into a .NET value.
+5. The known-good file, in `known_good_file` in `python_readers.py` and in
+   `KnownGoodFile.cs`, so that the setup's own tests cover the new type.
+
+### Row order
+
+`ReaderAssert.TableEquals` compares rows in order, so it relies on each
+reader returning rows in the order they have in the file. pyarrow, Polars,
+and DuckDB do. Spark does when it reads the file in a single task, and it
+makes no promise when it splits a file across tasks.
+
+The Spark containers run Spark with one worker thread. In a measurement with
+Spark 3.5.9 and 4.3.0, Spark with one thread read an 88 MB file with 12 row
+groups in one task. With two and four threads it used two and four tasks.
+The rows came back in file order in every run, but only the single task is
+relied on. The programs and their output are in
+`docs/research/spark-row-order`. A test whose file is larger than that, or
+that changes how Spark is started, has to sort the rows or compare them
+without regard to order.
 
 ## Two tiers
 
@@ -100,7 +139,8 @@ for every push to `main`.
 The library targets .NET 10, and an application on .NET 11 can use it. The
 second job covers that case. One unit test reads the environment variable
 `PARQUETRY_EXPECTED_RUNTIME_MAJOR`, which each job sets, and fails if the
-tests ran on a different version of the runtime. It is skipped when the
+tests ran on a different version of the runtime. On GitHub Actions it also
+fails if the variable is not set. Anywhere else it is skipped when the
 variable is not set. The decision record is
 [unit tests run on three operating systems and on the .NET 11 runtime](../adr/0040-ci-systems-and-runtimes.md).
 
