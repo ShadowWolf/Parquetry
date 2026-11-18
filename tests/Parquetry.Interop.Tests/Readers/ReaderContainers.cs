@@ -51,6 +51,11 @@ public sealed class ReaderContainers : IAsyncLifetime
     private static readonly TimeSpan RequestTimeout = TimeSpan.FromSeconds(60);
 
     /// <summary>
+    /// How long to wait before sending a request a second time.
+    /// </summary>
+    private static readonly TimeSpan RetryDelay = TimeSpan.FromMilliseconds(250);
+
+    /// <summary>
     /// The most text taken from the end of each of a container's two output
     /// streams for an error message.
     /// </summary>
@@ -189,6 +194,13 @@ public sealed class ReaderContainers : IAsyncLifetime
     /// not answer, or does not answer in time, is reported as an error of
     /// the test setup that names the container and includes its output.
     /// </summary>
+    /// <remarks>
+    /// A request whose connection ends without a response is sent once more
+    /// after a short wait. A connection lost that way says nothing about the
+    /// file, every request here can be repeated safely, and one such loss
+    /// was seen on GitHub's runner with nothing wrong in the container. If a
+    /// reader has crashed, the second attempt fails too.
+    /// </remarks>
     private async Task<HttpResponseMessage> SendAsync(
         string description,
         IContainer container,
@@ -206,7 +218,15 @@ public sealed class ReaderContainers : IAsyncLifetime
         timeout.CancelAfter(RequestTimeout);
         try
         {
-            return await send(timeout.Token);
+            try
+            {
+                return await send(timeout.Token);
+            }
+            catch (HttpRequestException)
+            {
+                await Task.Delay(RetryDelay, timeout.Token);
+                return await send(timeout.Token);
+            }
         }
         catch (HttpRequestException error)
         {
@@ -214,8 +234,8 @@ public sealed class ReaderContainers : IAsyncLifetime
             // it. The request in progress ends without an answer, and later
             // requests cannot connect.
             throw new InvalidOperationException(
-                $"No answer from {description}. A reader in it may have crashed, on this request or on an earlier one. " +
-                $"The end of the container's output: {await OutputOf(container)}",
+                $"No answer from {description}, after two attempts. A reader in it may have crashed, on this request " +
+                $"or on an earlier one. The end of the container's output: {await OutputOf(container)}",
                 error);
         }
         catch (OperationCanceledException error) when (!cancellationToken.IsCancellationRequested)

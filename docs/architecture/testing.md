@@ -99,6 +99,11 @@ The reasons for this design are in the decision record
   hang this way on a file with one damaged byte.
 - The tests must run on the machine that runs Docker, because each
   container's port is published only on that machine's loopback address.
+- A request whose connection ends without a response is sent a second time.
+  On GitHub's runner one request was lost that way with nothing wrong in the
+  container, and the cause was not found. A lost connection says nothing
+  about the file, so the second attempt cannot turn a wrong result into a
+  pass. If a reader has crashed, the second attempt fails as well.
 
 ### Adding a type
 

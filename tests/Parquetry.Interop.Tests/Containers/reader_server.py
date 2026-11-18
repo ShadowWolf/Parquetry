@@ -123,6 +123,12 @@ def serve(readers, versions, files=None):
     files = files or {}
 
     class Handler(BaseHTTPRequestHandler):
+        # With HTTP/1.1 a client keeps its connection open and sends its next
+        # request on it. The default, HTTP/1.0, opens and closes a connection
+        # for every request. Every response below has a Content-Length, which
+        # HTTP/1.1 needs to tell where a response ends.
+        protocol_version = "HTTP/1.1"
+
         def do_GET(self):
             if self.path == "/health":
                 self.send_json(200, {"readers": sorted(readers), "versions": versions})
@@ -185,4 +191,10 @@ def serve(readers, versions, files=None):
             # The default writes a line per request to the container's log.
             pass
 
-    ThreadingHTTPServer(("0.0.0.0", PORT), Handler).serve_forever()
+    class Server(ThreadingHTTPServer):
+        # How many connections can wait to be accepted. The default is 5.
+        # With that, a burst of more than a few requests at once had
+        # connections closed before they got a response.
+        request_queue_size = 128
+
+    Server(("0.0.0.0", PORT), Handler).serve_forever()

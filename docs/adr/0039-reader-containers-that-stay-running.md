@@ -120,6 +120,13 @@ were not put to the project owner as separate questions.
   While the setup was being built, a file with one damaged byte made Spark
   3.5.9 hang this way. Two worker threads would let one more read through,
   at the cost of the single task that the row order relies on.
+- The server keeps a client's connection open between requests and lets up
+  to 128 connections wait to be accepted. With the default of 5, a burst of
+  16 requests at once had some connections closed before they got a
+  response. The C# side sends a request a second time if its connection ends
+  without a response. One request was lost that way on GitHub's runner
+  while the setup was being built, in a run that sent one request at a
+  time, and the cause was not found.
 - The tests have to run on the machine that runs Docker. With Docker on
   another machine, or with the tests inside a container that uses the host's
   Docker, the published port cannot be reached and the containers fail to
